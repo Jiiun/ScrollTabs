@@ -1,0 +1,87 @@
+.zwy-tabs-wrapper {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  width: 100%;
+}
+.zwy-tabs-container {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  height: 100%;
+  -webkit-box-flex: 1;
+}
+.zwy-tabs {
+  width: 100%;
+  background: #fff;
+  font-size: 16px;
+  z-index: 10;
+  overflow: hidden;
+}
+.zwy-tabs > .items {
+  display: -webkit-box;
+  width: 100%;
+  transition: transform 0.2s ease-in;
+  -webkit-transition: -webkit-transform 0.2s ease-in;
+}
+.zwy-tabs > .items > a {
+  -webkit-box-flex: 1;
+  height: 1.52rem;
+  line-height: 1.52rem;
+  width: 100%;
+  color: #333333;
+  text-align: center;
+  border-bottom: 2px solid #e8e8e8;
+  position: relative;
+  display: -webkit-box;
+  -webkit-box-align: center;
+  -webkit-box-pack: center;
+  box-sizing: border-box;
+}
+.zwy-tabs > .items > a > i {
+  display: block;
+  padding-right: .156rem;
+}
+.zwy-tabs > .items > a > span {
+  display: block;
+}
+.zwy-tabs > .items > a > span ins {
+  color: #31bfcf;
+  text-decoration: none;
+}
+.zwy-tabs > .items > a.selected {
+  color: #31bfcf;
+  border-bottom-color: #31bfcf;
+}
+.zwy-tabs.beyond > .items > a {
+  -webkit-box-flex: 0;
+  width: 25%;
+}
+.zwy-tabs-content {
+  -webkit-box-flex: 1;
+  height: 100%;
+  width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+.zwy-tabs-content.stick {
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
+}
+.zwy-tabs-content.carousel {
+  overflow: hidden;
+}
+.zwy-tabs-content .scroller {
+  display: -webkit-box;
+}
+.zwy-tabs-content .scroller .tab {
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+  background: #fff;
+  min-height: 100%;
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
+}
+.zwy-tabs-content .scroller .tab .container {
+  width: 100%;
+}

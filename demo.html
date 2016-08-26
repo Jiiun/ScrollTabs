@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>类似手机天猫滑动页签</title>
+	<meta content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
+
+	<link href="src/css/pages.css" rel="stylesheet"/>
+	<link href="src/css/tabs.css" rel="stylesheet"/>
+
+	<style type="text/css">
+		#content{
+			width: 100%;
+			overflow: hidden;
+		}
+		/*.content >div{
+			
+			display: none;
+		}*/
+		.scroller{
+			width: 100%;
+			display: -webkit-box;
+		}
+		.scroller >div{
+			width: 100%;
+		}
+		.scroller >div:nth-child(1){
+			background: #e8e8e8;
+			
+			height: 100px;
+		}
+		.scroller >div:nth-child(2){
+			background: #d7d7d7;
+			height: 200px;
+			
+		}
+		.scroller >div:nth-child(3){
+			background: #ccc;
+			height: 300px;
+			
+		}
+		.scroller >div:nth-child(4){
+			background: #ccc;
+			height: 300px;
+			
+		}
+		.scroller >div:nth-child(5){
+			background: #ccc;
+			height: 300px;
+			
+		}
+		.container{
+			font-size: 50px;
+		}
+		/*.scroller .selected{
+			display: block;
+		}*/
+		
+	</style>
+</head>
+<body>
+	<div id="wrapper" class="wrapper">
+		<div id="content" class="content">
+			<div id="scroller" class="scroller">
+				<div class="tab current">
+	                <div class="container" style="height: 1000px">
+	                	页签1(1000px)
+	                </div>
+	            </div>
+	            <div class="tab" >
+	                <div class="container" style="height: 500px">
+	                	页签2(500px)
+	                </div>
+	            </div>
+	            <div class="tab" >
+	                <div class="container" style="height: 800px">
+	                	页签3(800px)
+	                </div>
+	            </div>
+	            <div class="tab" >
+	                <div class="container" style="height: 1800px">
+	                	页签4(1800px)
+	                </div>
+	            </div>
+	            <div class="tab" >
+	                <div class="container" style="height: 100px">
+	                	页签5(100px)
+	                </div>
+	            </div>
+			</div>
+		</div>
+	</div>
+	
+	<script src="src/lib/zepto.js"></script>
+	<script src="bin/ScrollTabs.js"></script>
+</body>
+</html>
