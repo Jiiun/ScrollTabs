@@ -1,25 +1,30 @@
 var ArrayUtil = require('./array');
+require('./eventHandler');
+
 var DOM = (function(){
 	var tid;
 
-	function tap(container, selector, event, callback){
+	function tap(container, selector, type, callback){
 
 		var position = {};
+		if(typeof container == 'string'){
+			container = document.querySelectorAll(container);
+		}
 
-		$(container).delegate(selector, 'touchstart', function(ev){
+		container.delegate(selector, 'touchstart', function(ev){
 
 			// ev.preventDefault();
-			var touch = ev.changedTouches[0];
+			var touch = event.changedTouches[0];
 			tapStart(touch, position);
 
 
 		});
 
 
-		$(container).delegate(selector, 'touchend', function(ev){
+		container.delegate(selector, 'touchend', function(ev){
 
 
-			var touch = ev.changedTouches[0];
+			var touch = event.changedTouches[0];
 			tapEnd(touch, position, callback, this, function(){
 
 				ev.preventDefault();
@@ -28,24 +33,27 @@ var DOM = (function(){
 		});
 	}
 
-	function onTap(selector, event, callback){
+	function onTap(selector, type, callback){
 
 		var position = {};
+		if(typeof selector == 'string'){
+			selector = document.querySelectorAll(selector);
+		}
 
-		$(selector).on('touchstart', function(ev){
+		selector.on('touchstart', function(ev){
 
 			// ev.preventDefault();
-			var touch = ev.changedTouches[0];
+			var touch = event.changedTouches[0];
 			tapStart(touch, position);
 
 
 		});
 
 
-		$(selector).on('touchend', function(ev){
+		selector.on('touchend', function(ev){
 
 
-			var touch = ev.changedTouches[0];
+			var touch = event.changedTouches[0];
 			tapEnd(touch, position, callback, this, function(){
 
 				ev.preventDefault();
@@ -92,34 +100,34 @@ var DOM = (function(){
 		
 	}
 
-	function delegate(container, selector, event, callback){
+	function delegate(container, selector, type, callback){
 
-		if(event == 'tap'){
-			tap(container, selector, event, callback);
+		if(type == 'tap'){
+			tap(container, selector, type, callback);
 			return;
 		}
-		else if(event == 'click'){
+		else if(type == 'click'){
 
 			callback = getClickEvent(callback);
 			
 		}
 
-		$(container).delegate(selector, event, callback);
+		container.delegate(selector, type, callback);
 	}
 
-	function on(selector, event, callback){
+	function on(selector, type, callback){
 
-		if(event == 'tap'){
-			onTap(selector, event, callback);
+		if(type == 'tap'){
+			onTap(selector, type, callback);
 			return;
 		}
-		else if(event == 'click'){
+		else if(type == 'click'){
 
 			callback = getClickEvent(callback);
 			
 		}
 
-		document.querySelector(selector).addEventListener(event, callback);
+		document.querySelector(selector).addEventListener(type, callback);
 	}
 
 	function addClassOnly(obj, className, index){

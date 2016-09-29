@@ -1,4 +1,4 @@
-
+var arrayUtil = require('./array');
 var StringUtil = (function(){
 
   function random(formater) {
@@ -34,7 +34,7 @@ var StringUtil = (function(){
         var s = between(text, item0.begin, item0.end);
 
         //倒序处理子模板。 注意: 最外层的不在里面处理
-        $.each(tags.slice(1).reverse(), function (index, item) {
+        arrayUtil.forEach(tags.slice(1).reverse(), function (item, index) {
 
             var name = item.name || index;
             var begin = item.begin;

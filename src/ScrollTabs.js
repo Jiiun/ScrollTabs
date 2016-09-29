@@ -1,7 +1,9 @@
 
 var TransformStyle = require('./modules/transformStyle');
-var Time = require('./modules/time');
-var StringUtil = require('./modules/string');
+var datetimeUtil = require('./modules/datetime');
+var stringUtil = require('./modules/string');
+var arrayUtil = require('./modules/array');
+require('./modules/eventHandler');
 
 var Carousel = require('./dependency/carousel');
 
@@ -9,7 +11,7 @@ var BaseTabs = require('./modules/tabs');
 
 var ScrollTabs = (function(){
 
-	var Tabs = (function($){
+	var Tabs = (function(){
 
 	 	var html = '<!--<div class="items">#--tab.begin--#<a data-index="{index}"><i class="{icon}"></i><span>{name}{num}</span></a>#--tab.end--#</div>-->'
 	 	var transformStyle = TransformStyle;
@@ -20,9 +22,9 @@ var ScrollTabs = (function(){
 		var gap = limit - 1;
 		var limitClass = 'beyond';
 
-		var getTime = Time.getTime;
+		var getTime = datetimeUtil.getTime;
 
-		var samples = StringUtil.getTemplates(html, [
+		var samples = stringUtil.getTemplates(html, [
 			{
 				name: 'group',
 				begin: '<!--',
@@ -50,7 +52,7 @@ var ScrollTabs = (function(){
 
 			}
 
-			var id = this.id = 'tabs-'+ StringUtil.random();
+			var id = this.id = 'tabs-'+ stringUtil.random();
 			var self = this;
 			this.container = document.getElementById(config.container);
 			this.tranisitionDuration = config.duration || 200;
@@ -90,7 +92,7 @@ var ScrollTabs = (function(){
 			//负责实现呈现哪个视图
 			this.carousel = new Carousel({
 				'id': document.querySelector('#'+meta.id),
-				'indicators': id,
+				'indicators': this.tabsContainer,
 				'current': config.current || 0,
 				'dire': function(){
 					return self.dire;
@@ -162,7 +164,7 @@ var ScrollTabs = (function(){
 			'move': function(ev){
 
 				//this.dire == true 代表垂直，优先考虑纵向
-				var touch = this.touch = ev.touches[0];
+				var touch = this.touch = event.touches[0];
 				this.lastMove = getTime();
 				var self = this;
 			
@@ -253,12 +255,12 @@ var ScrollTabs = (function(){
 
 				var meta = this.meta;
 
-				var html = StringUtil.format(samples['group'],{
-					'tab': $.map(meta.data || [],function(item, index){
-								return StringUtil.format(samples['tab'],{
+				var html = stringUtil.format(samples['group'],{
+					'tab': arrayUtil.map(meta.data || [],function(item, index){
+								return stringUtil.format(samples['tab'],{
 									'index': index,
 									'name': item.name,
-									'num': item.num && item.num !== 0 ? $.String.format('<ins>({val})</ins>', {
+									'num': item.num && item.num !== 0 ? stringUtil.format('<ins>({val})</ins>', {
 										'val': item.num
 									}): '',
 									'icon': item.icon || ''
@@ -369,7 +371,7 @@ var ScrollTabs = (function(){
 				
 				var meta = this.meta;
 
-				$.each(list, function(index, item){
+				arrayUtil.forEach(list, function(index, item){
 					meta.data[index].num = item;
 				});
 
@@ -380,7 +382,7 @@ var ScrollTabs = (function(){
 
 		return Tabs;
 
-	})($);
+	})();
 
 	return Tabs
 

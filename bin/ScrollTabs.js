@@ -84,16 +84,18 @@
 
 	
 	var TransformStyle = __webpack_require__(2);
-	var Time = __webpack_require__(3);
-	var StringUtil = __webpack_require__(4);
+	var datetimeUtil = __webpack_require__(3);
+	var stringUtil = __webpack_require__(4);
+	var arrayUtil = __webpack_require__(5);
+	__webpack_require__(6);
 
-	var Carousel = __webpack_require__(5);
+	var Carousel = __webpack_require__(11);
 
-	var BaseTabs = __webpack_require__(9);
+	var BaseTabs = __webpack_require__(15);
 
 	var ScrollTabs = (function(){
 
-		var Tabs = (function($){
+		var Tabs = (function(){
 
 		 	var html = '<!--<div class="items">#--tab.begin--#<a data-index="{index}"><i class="{icon}"></i><span>{name}{num}</span></a>#--tab.end--#</div>-->'
 		 	var transformStyle = TransformStyle;
@@ -104,9 +106,9 @@
 			var gap = limit - 1;
 			var limitClass = 'beyond';
 
-			var getTime = Time.getTime;
+			var getTime = datetimeUtil.getTime;
 
-			var samples = StringUtil.getTemplates(html, [
+			var samples = stringUtil.getTemplates(html, [
 				{
 					name: 'group',
 					begin: '<!--',
@@ -134,7 +136,7 @@
 
 				}
 
-				var id = this.id = 'tabs-'+ StringUtil.random();
+				var id = this.id = 'tabs-'+ stringUtil.random();
 				var self = this;
 				this.container = document.getElementById(config.container);
 				this.tranisitionDuration = config.duration || 200;
@@ -174,7 +176,7 @@
 				//负责实现呈现哪个视图
 				this.carousel = new Carousel({
 					'id': document.querySelector('#'+meta.id),
-					'indicators': id,
+					'indicators': this.tabsContainer,
 					'current': config.current || 0,
 					'dire': function(){
 						return self.dire;
@@ -246,7 +248,7 @@
 				'move': function(ev){
 
 					//this.dire == true 代表垂直，优先考虑纵向
-					var touch = this.touch = ev.touches[0];
+					var touch = this.touch = event.touches[0];
 					this.lastMove = getTime();
 					var self = this;
 				
@@ -337,12 +339,12 @@
 
 					var meta = this.meta;
 
-					var html = StringUtil.format(samples['group'],{
-						'tab': $.map(meta.data || [],function(item, index){
-									return StringUtil.format(samples['tab'],{
+					var html = stringUtil.format(samples['group'],{
+						'tab': arrayUtil.map(meta.data || [],function(item, index){
+									return stringUtil.format(samples['tab'],{
 										'index': index,
 										'name': item.name,
-										'num': item.num && item.num !== 0 ? $.String.format('<ins>({val})</ins>', {
+										'num': item.num && item.num !== 0 ? stringUtil.format('<ins>({val})</ins>', {
 											'val': item.num
 										}): '',
 										'icon': item.icon || ''
@@ -453,7 +455,7 @@
 					
 					var meta = this.meta;
 
-					$.each(list, function(index, item){
+					arrayUtil.forEach(list, function(index, item){
 						meta.data[index].num = item;
 					});
 
@@ -464,7 +466,7 @@
 
 			return Tabs;
 
-		})($);
+		})();
 
 		return Tabs
 
@@ -525,27 +527,24 @@
 /* 3 */
 /***/ function(module, exports) {
 
-	
-	var Time = (function(){
+	var Date = window.Date;
 
-	  var Date = window.Date;
-	  
-	  function getTime(){
+	var DateTime = {
+	  getTime: function(){
 	      return (Date.now || new Date().getTime)();
+	  },
+	  now: function() {
+		return +( new Date() );
 	  }
+	};
 
-	  return {
-	    getTime: getTime
-	  }
-	})();
-
-	module.exports = Time;
+	module.exports = DateTime;
 
 /***/ },
 /* 4 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
-	
+	var arrayUtil = __webpack_require__(5);
 	var StringUtil = (function(){
 
 	  function random(formater) {
@@ -581,7 +580,7 @@
 	        var s = between(text, item0.begin, item0.end);
 
 	        //倒序处理子模板。 注意: 最外层的不在里面处理
-	        $.each(tags.slice(1).reverse(), function (index, item) {
+	        arrayUtil.forEach(tags.slice(1).reverse(), function (item, index) {
 
 	            var name = item.name || index;
 	            var begin = item.begin;
@@ -700,14 +699,2141 @@
 
 /***/ },
 /* 5 */
+/***/ function(module, exports) {
+
+	
+	var class2type = {},
+	    toString = class2type.toString,
+	    hasOwn = ({}).hasOwnProperty,
+	    concat = [].concat;
+
+	var isWindow = function( obj ) {
+	    /* jshint eqeqeq: false */
+	    return obj != null && obj == obj.window;
+	}
+	var typeOf = function( obj ) {
+	    if ( obj == null ) {
+	        return obj + "";
+	    }
+	    return typeof obj === "object" || typeof obj === "function" ?
+	        class2type[ toString.call(obj) ] || "object" :
+	        typeof obj;
+	}
+
+	var isArraylike = function( obj ) {
+	    var length = obj.length,
+	        type = typeOf( obj );
+
+	    if ( type === "function" || isWindow( obj ) ) {
+	        return false;
+	    }
+
+	    if ( obj.nodeType === 1 && length ) {
+	        return true;
+	    }
+
+	    return type === "array" || length === 0 ||
+	        typeof length === "number" && length > 0 && ( length - 1 ) in obj;
+	}
+
+	// Use a stripped-down indexOf if we can't use a native one
+	var indexOf = [].indexOf || function( elem ) {
+	    var i = 0,
+	        len = this.length;
+	    for ( ; i < len; i++ ) {
+	        if ( this[i] === elem ) {
+	            return i;
+	        }
+	    }
+	    return -1;
+	}
+
+	var ArrayUtil = {
+	    
+	    exist: function(array, fn, startIndex){
+	        startIndex = startIndex || 0;
+
+	        for (var i = startIndex, len = array.length; i < len; i++) {
+	            if (fn(array[i], i) === true) { // 只有在 fn 中明确返回 true 才停止循环
+	                return i;
+	            }
+	        }
+
+	        return -1;
+	    },
+	    forEach: function(array, fn, isDeep){
+
+	        var each = arguments.callee; //引用自身，用于递归
+
+	        for (var i = 0, len = array.length; i < len; i++) {
+
+	            var item = array[i];
+
+	            if (isDeep && (item instanceof Array)) { //指定了深层次迭代
+	                each(item, fn, true);
+	            }
+	            else {
+	                var value = fn.call(item, item, i);
+	                if (value === false) {
+	                    break;
+	                }
+	            }
+	        }
+
+	        return array;
+
+	    },
+	    // map: function (array, fn, isDeep) {
+
+	    //     if (typeof array == 'number') { //重载 keep(startIndex, endIndex, fn)
+	    //         var startIndex = array;
+	    //         var endIndex = fn;
+	    //         fn = isDeep;
+	    //         array = exports.pad(startIndex, endIndex);
+	    //         isDeep = false;
+	    //     }
+
+
+	    //     var map = arguments.callee; //引用自身，用于递归
+	    //     var a = [];
+	    //     var value;
+
+	    //     for (var i = 0, len = array.length; i < len; i++) {
+	    //         var item = array[i];
+
+	    //         if (isDeep && (item instanceof Array)) {
+	    //             value = map(item, fn, true); // 此时的 value 是一个 []
+	    //         }
+	    //         else {
+	    //             value = fn.call(item, item, i);
+
+	    //             if (value === null) {
+	    //                 continue;
+	    //             }
+
+	    //             if (value === undefined) { //注意，当回调函数 fn 不返回值时，迭代会给停止掉
+	    //                 break;
+	    //             }
+	    //         }
+
+
+	    //         a.push(value);
+	    //     }
+
+	    //     return a;
+	    // },
+	    map: function (elems, callback, arg) {
+	        //console.log(callback);
+	        var value,
+	            i = 0,
+	            length = elems.length,
+	            isArray = isArraylike( elems ),
+	            ret = [];
+
+	        // Go through the array, translating each of the items to their new values
+	        if ( isArray ) {
+	            for ( ; i < length; i++ ) {
+	                value = callback.call(elems[ i ], elems[ i ], i, arg );
+
+	                if ( value != null ) {
+	                    ret.push( value );
+	                }
+	            }
+
+	        // Go through every key on the object,
+	        } else {
+	            for ( i in elems ) {
+	                value = callback.call(elems[ i ], elems[ i ], i, arg );
+
+	                if ( value != null ) {
+	                    ret.push( value );
+	                }
+	            }
+	        }
+
+	        // Flatten any nested arrays
+	        return concat.apply( [], ret );
+	    },
+	    isArray: function(obj){
+	        return Object.prototype.toString.call(obj).slice(8, -1) === 'Array';
+	    },
+	    // results is for internal usage only
+	    makeArray: function( arr, results ) {
+	        var ret = results || [];
+
+	        if ( arr != null ) {
+	            if ( isArraylike( Object(arr) ) ) {
+	                ArrayUtil.merge( ret,
+	                    typeof arr === "string" ?
+	                    [ arr ] : arr
+	                );
+	            } else {
+	                [].push.call( ret, arr );
+	            }
+	        }
+
+	        return ret;
+	    },
+	    merge: function( first, second ) {
+	        var len = +second.length,
+	            j = 0,
+	            i = first.length;
+
+	        while ( j < len ) {
+	            first[ i++ ] = second[ j++ ];
+	        }
+
+	        // Support: IE<9
+	        // Workaround casting of .length to NaN on otherwise arraylike objects (e.g., NodeLists)
+	        if ( len !== len ) {
+	            while ( second[j] !== undefined ) {
+	                first[ i++ ] = second[ j++ ];
+	            }
+	        }
+
+	        first.length = i;
+
+	        return first;
+	    },
+	    inArray: function( elem, arr, i ) {
+	        var len;
+
+	        if ( arr ) {
+	            if ( indexOf ) {
+	                return indexOf.call( arr, elem, i );
+	            }
+
+	            len = arr.length;
+	            i = i ? i < 0 ? Math.max( 0, len + i ) : i : 0;
+
+	            for ( ; i < len; i++ ) {
+	                // Skip accessing in sparse arrays
+	                if ( i in arr && arr[ i ] === elem ) {
+	                    return i;
+	                }
+	            }
+	        }
+
+	        return -1;
+	    },
+	    // Take an array of elements and push it onto the stack
+	    // (returning the new matched element set)
+	    pushStack: function( elems ) {
+
+	        // Build a new jQuery matched element set
+	        var ret = ArrayUtil.merge( this.constructor(), elems );
+
+	        // Add the old object onto the stack (as a reference)
+	        ret.prevObject = this;
+	        ret.context = this.context;
+
+	        // Return the newly-formed element set
+	        return ret;
+	    },
+
+	    grep: function( elems, callback, invert ) {
+	        var callbackInverse,
+	            matches = [],
+	            i = 0,
+	            length = elems.length,
+	            callbackExpect = !invert;
+
+	        // Go through the array, only saving the items
+	        // that pass the validator function
+	        for ( ; i < length; i++ ) {
+	            callbackInverse = !callback( elems[ i ], i );
+	            if ( callbackInverse !== callbackExpect ) {
+	                matches.push( elems[ i ] );
+	            }
+	        }
+
+	        return matches;
+	    },
+
+	    unique: function( results, sortOrder ) {
+	        var elem,
+	            duplicates = [],
+	            j = 0,
+	            i = 0,
+	            len = results.length;
+
+	        // Unless we *know* we can detect duplicates, assume their presence
+	        results.sort( sortOrder );
+
+	        while ( i < len - 1 ) {
+	            elem = results[i++]
+	            if ( elem === results[ i ] ) {
+	                j = duplicates.push( i );
+	            }
+	        }
+	        while ( j-- ) {
+	            results.splice( duplicates[ j ], 1 );
+	        }
+	        
+
+	        // Clear input after sorting to release objects
+	        // See https://github.com/jquery/sizzle/pull/225
+	        // sortInput = null;
+
+	        return results;
+	    }
+
+	};
+
+	module.exports = ArrayUtil;
+
+/***/ },
+/* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var DOM = __webpack_require__(6);
-	var TransformStyle = __webpack_require__(2);
-	var Transition = __webpack_require__(8);
-	var Time = __webpack_require__(3);
+	var objectUtil = __webpack_require__(7);
+	var arrayUtil = __webpack_require__(5);
+	var stringUtil = __webpack_require__(4);
+	var cacheUtil = __webpack_require__(8);
+	var datetimeUtil = __webpack_require__(3);
+	var htmlElementUtil = __webpack_require__(10);
 
-	var Carousel = (function($){
+	var rformElems = /^(?:input|select|textarea)$/i,
+		rkeyEvent = /^key/,
+		rmouseEvent = /^(?:mouse|pointer|contextmenu)|click/,
+		rfocusMorph = /^(?:focusinfocus|focusoutblur)$/,
+		rtypenamespace = /^([^.]*)(?:\.(.+)|)$/;
+	var rnotwhite = (/\S+/g);
+
+	var whitespace = "[\\x20\\t\\r\\n\\f]",
+		rneedsContext = new RegExp( "^" + whitespace + "*[>+~]|:(even|odd|eq|gt|lt|nth|first|last)(?:\\(" +
+				whitespace + "*((?:-\\d)?\\d*)" + whitespace + "*\\)|)(?=[^-]|$)", "i" );
+
+	var strundefined = typeof undefined;
+
+	function returnTrue() {
+		return true;
+	}
+
+	function returnFalse() {
+		return false;
+	}
+
+	var EventHandler = {
+		bind: function( types, data, fn ) {
+			return this.on( types, null, data, fn );
+		},
+		unbind: function( types, fn ) {
+			return this.off( types, null, fn );
+		},
+
+		delegate: function( selector, types, data, fn ) {
+			return this.on( types, selector, data, fn );
+		},
+		undelegate: function( selector, types, fn ) {
+			// ( namespace ) or ( selector, types [, fn] )
+			return arguments.length === 1 ? this.off( selector, "**" ) : this.off( types, selector || "**", fn );
+		},
+		on: function( types, selector, data, fn, one) {
+			var type, origFn;
+
+			// Types can be a map of types/handlers
+			if ( typeof types === "object" ) {
+				// ( types-Object, selector, data )
+				if ( typeof selector !== "string" ) {
+					// ( types-Object, data )
+					data = data || selector;
+					selector = undefined;
+				}
+				for ( type in types ) {
+					this.on( type, selector, data, types[ type ], one );
+				}
+				return this;
+			}
+
+			if ( data == null && fn == null ) {
+				// ( types, fn )
+				fn = selector;
+				data = selector = undefined;
+			} else if ( fn == null ) {
+				if ( typeof selector === "string" ) {
+					// ( types, selector, fn )
+					fn = data;
+					data = undefined;
+				} else {
+					// ( types, data, fn )
+					fn = data;
+					data = selector;
+					selector = undefined;
+				}
+			}
+			if ( fn === false ) {
+				fn = returnFalse;
+			} else if ( !fn ) {
+				return this;
+			}
+
+			if ( one === 1 ) {
+				origFn = fn;
+				fn = function( event ) {
+					// Can use an empty set, since event contains the info
+					EventHandler.off( event );
+					return origFn.apply( this, arguments );
+				};
+				// Use same guid so caller can remove using origFn
+				fn.guid = origFn.guid || ( origFn.guid = cacheUtil.guid++ );
+			}
+			var nodeList = htmlElementUtil.isDOMList(this) ? this : [this];
+			return arrayUtil.forEach(nodeList, function() {
+				EventHandler.add( this, types, fn, data, selector );
+			});
+		},
+		one: function( types, selector, data, fn ) {
+			return this.on( types, selector, data, fn, 1 );
+		},
+		off: function( types, selector, fn ) {
+			var handleObj, type;
+			if ( types && types.preventDefault && types.handleObj ) {
+				// ( event )  dispatched jQuery.Event
+				handleObj = types.handleObj;
+				types.delegateTarget.off(
+					handleObj.namespace ? handleObj.origType + "." + handleObj.namespace : handleObj.origType,
+					handleObj.selector,
+					handleObj.handler
+				);
+				return this;
+			}
+			if ( typeof types === "object" ) {
+				// ( types-object [, selector] )
+				for ( type in types ) {
+					this.off( type, selector, types[ type ] );
+				}
+				return this;
+			}
+			if ( selector === false || typeof selector === "function" ) {
+				// ( types [, fn] )
+				fn = selector;
+				selector = undefined;
+			}
+			if ( fn === false ) {
+				fn = returnFalse;
+			}
+			var nodeList = htmlElementUtil.isDOMList(this) ? this : [this];
+			return arrayUtil.forEach(nodeList, function() {
+				EventHandler.remove( this, types, fn, selector );
+			});
+		},
+
+		trigger: function( type, data ) {
+			var nodeList = htmlElementUtil.isDOMList(this) ? this : [this];
+			return arrayUtil.forEach(nodeList, function() {
+				EventHandler.trigger( type, data, this );
+			});
+		},
+		triggerHandler: function( type, data ) {
+			var elem = this[0];
+			if ( elem ) {
+				return EventHandler.trigger( type, data, elem, true );
+			}
+		},
+
+
+
+	/*
+	 * Helper functions for managing events -- not part of the public interface.
+	 * Props to Dean Edwards' addEvent library for many of the ideas.
+	 */
+
+		global: {},
+
+		add: function( elem, types, handler, data, selector ) {
+			var tmp, events, t, handleObjIn,
+				special, eventHandle, handleObj,
+				handlers, type, namespaces, origType,
+				elemData = cacheUtil._data( elem );
+
+			// Don't attach events to noData or text/comment nodes (but allow plain objects)
+			if ( !elemData ) {
+				return;
+			}
+			
+			// Caller can pass in an object of custom data in lieu of the handler
+			if ( handler.handler ) {
+				handleObjIn = handler;
+				handler = handleObjIn.handler;
+				selector = handleObjIn.selector;
+			}
+
+			// Make sure that the handler has a unique ID, used to find/remove it later
+			if ( !handler.guid ) {
+				handler.guid = cacheUtil.guid++;
+			}
+
+			// Init the element's event structure and main handler, if this is the first
+			if ( !(events = elemData.events) ) {
+				events = elemData.events = {};
+			}
+			if ( !(eventHandle = elemData.handle) ) {
+				eventHandle = elemData.handle = function( e ) {
+					// Discard the second event of a EventHandler.trigger() and
+					// when an event is called after a page has unloaded
+					return (!e || EventHandler.triggered !== e.type) ?
+						EventHandler.dispatch.apply( eventHandle.elem, arguments ) :
+						undefined;
+				};
+				// Add elem as a property of the handle fn to prevent a memory leak with IE non-native events
+				eventHandle.elem = elem;
+			}
+
+			// Handle multiple events separated by a space
+			types = ( types || "" ).match( rnotwhite ) || [ "" ];
+			t = types.length;
+			while ( t-- ) {
+				tmp = rtypenamespace.exec( types[t] ) || [];
+				type = origType = tmp[1];
+				namespaces = ( tmp[2] || "" ).split( "." ).sort();
+
+				// There *must* be a type, no attaching namespace-only handlers
+				if ( !type ) {
+					continue;
+				}
+
+				// If event changes its type, use the special event handlers for the changed type
+				special = EventHandler.special[ type ] || {};
+
+				// If selector defined, determine special event api type, otherwise given type
+				type = ( selector ? special.delegateType : special.bindType ) || type;
+
+				// Update special based on newly reset type
+				special = EventHandler.special[ type ] || {};
+
+				// handleObj is passed to all event handlers
+				handleObj = objectUtil.extend({
+					type: type,
+					origType: origType,
+					data: data,
+					handler: handler,
+					guid: handler.guid,
+					selector: selector,
+					needsContext: selector && rneedsContext.test( selector ),
+					namespace: namespaces.join(".")
+				}, handleObjIn );
+
+				// Init the event handler queue if we're the first
+				if ( !(handlers = events[ type ]) ) {
+					handlers = events[ type ] = [];
+					handlers.delegateCount = 0;
+
+					// Only use addEventListener/attachEvent if the special events handler returns false
+					if ( !special.setup || special.setup.call( elem, data, namespaces, eventHandle ) === false ) {
+						// Bind the global event handler to the element
+						if ( elem.addEventListener ) {
+							elem.addEventListener( type, eventHandle, false );
+
+						} else if ( elem.attachEvent ) {
+							elem.attachEvent( "on" + type, eventHandle );
+						}
+					}
+				}
+
+				if ( special.add ) {
+					special.add.call( elem, handleObj );
+
+					if ( !handleObj.handler.guid ) {
+						handleObj.handler.guid = handler.guid;
+					}
+				}
+
+				// Add to the element's handler list, delegates in front
+				if ( selector ) {
+					handlers.splice( handlers.delegateCount++, 0, handleObj );
+				} else {
+					handlers.push( handleObj );
+				}
+
+				// Keep track of which events have ever been used, for event optimization
+				EventHandler.global[ type ] = true;
+			}
+
+			// Nullify elem to prevent memory leaks in IE
+			elem = null;
+		},
+
+		// Detach an event or set of events from an element
+		remove: function( elem, types, handler, selector, mappedTypes ) {
+			var j, handleObj, tmp,
+				origCount, t, events,
+				special, handlers, type,
+				namespaces, origType,
+				elemData = cacheUtil.hasData( elem ) && cacheUtil._data( elem );
+
+			if ( !elemData || !(events = elemData.events) ) {
+				return;
+			}
+
+			// Once for each type.namespace in types; type may be omitted
+			types = ( types || "" ).match( rnotwhite ) || [ "" ];
+			t = types.length;
+			while ( t-- ) {
+				tmp = rtypenamespace.exec( types[t] ) || [];
+				type = origType = tmp[1];
+				namespaces = ( tmp[2] || "" ).split( "." ).sort();
+
+				// Unbind all events (on this namespace, if provided) for the element
+				if ( !type ) {
+					for ( type in events ) {
+						EventHandler.remove( elem, type + types[ t ], handler, selector, true );
+					}
+					continue;
+				}
+
+				special = EventHandler.special[ type ] || {};
+				type = ( selector ? special.delegateType : special.bindType ) || type;
+				handlers = events[ type ] || [];
+				tmp = tmp[2] && new RegExp( "(^|\\.)" + namespaces.join("\\.(?:.*\\.|)") + "(\\.|$)" );
+
+				// Remove matching events
+				origCount = j = handlers.length;
+				while ( j-- ) {
+					handleObj = handlers[ j ];
+
+					if ( ( mappedTypes || origType === handleObj.origType ) &&
+						( !handler || handler.guid === handleObj.guid ) &&
+						( !tmp || tmp.test( handleObj.namespace ) ) &&
+						( !selector || selector === handleObj.selector || selector === "**" && handleObj.selector ) ) {
+						handlers.splice( j, 1 );
+
+						if ( handleObj.selector ) {
+							handlers.delegateCount--;
+						}
+						if ( special.remove ) {
+							special.remove.call( elem, handleObj );
+						}
+					}
+				}
+
+				// Remove generic event handler if we removed something and no more handlers exist
+				// (avoids potential for endless recursion during removal of special event handlers)
+				if ( origCount && !handlers.length ) {
+					if ( !special.teardown || special.teardown.call( elem, namespaces, elemData.handle ) === false ) {
+						EventHandler.removeEvent( elem, type, elemData.handle );
+					}
+
+					delete events[ type ];
+				}
+			}
+
+			// Remove the expando if it's no longer used
+			if ( objectUtil.isEmptyObject( events ) ) {
+				delete elemData.handle;
+
+				// removeData also checks for emptiness and clears the expando if empty
+				// so use it instead of delete
+				cacheUtil._removeData( elem, "events" );
+			}
+		},
+
+		trigger: function( event, data, elem, onlyHandlers ) {
+			var handle, ontype, cur,
+				bubbleType, special, tmp, i,
+				eventPath = [ elem || document ],
+				type = hasOwn.call( event, "type" ) ? event.type : event,
+				namespaces = hasOwn.call( event, "namespace" ) ? event.namespace.split(".") : [];
+
+			cur = tmp = elem = elem || document;
+
+			// Don't do events on text and comment nodes
+			if ( elem.nodeType === 3 || elem.nodeType === 8 ) {
+				return;
+			}
+
+			// focus/blur morphs to focusin/out; ensure we're not firing them right now
+			if ( rfocusMorph.test( type + EventHandler.triggered ) ) {
+				return;
+			}
+
+			if ( type.indexOf(".") >= 0 ) {
+				// Namespaced trigger; create a regexp to match event type in handle()
+				namespaces = type.split(".");
+				type = namespaces.shift();
+				namespaces.sort();
+			}
+			ontype = type.indexOf(":") < 0 && "on" + type;
+
+			// Caller can pass in a jQuery.Event object, Object, or just an event type string
+			event = event[ cacheUtil.expando ] ?
+				event :
+				new EventHandler.Event( type, typeof event === "object" && event );
+
+			// Trigger bitmask: & 1 for native handlers; & 2 for jQuery (always true)
+			event.isTrigger = onlyHandlers ? 2 : 3;
+			event.namespace = namespaces.join(".");
+			event.namespace_re = event.namespace ?
+				new RegExp( "(^|\\.)" + namespaces.join("\\.(?:.*\\.|)") + "(\\.|$)" ) :
+				null;
+
+			// Clean up the event in case it is being reused
+			event.result = undefined;
+			if ( !event.target ) {
+				event.target = elem;
+			}
+
+			// Clone any incoming data and prepend the event, creating the handler arg list
+			data = data == null ?
+				[ event ] :
+				arrayUtil.makeArray( data, [ event ] );
+
+			// Allow special events to draw outside the lines
+			special = EventHandler.special[ type ] || {};
+			if ( !onlyHandlers && special.trigger && special.trigger.apply( elem, data ) === false ) {
+				return;
+			}
+
+			// Determine event propagation path in advance, per W3C events spec (#9951)
+			// Bubble up to document, then to window; watch for a global ownerDocument var (#9724)
+			if ( !onlyHandlers && !special.noBubble && !objectUtil.isWindow( elem ) ) {
+
+				bubbleType = special.delegateType || type;
+				if ( !rfocusMorph.test( bubbleType + type ) ) {
+					cur = cur.parentNode;
+				}
+				for ( ; cur; cur = cur.parentNode ) {
+					eventPath.push( cur );
+					tmp = cur;
+				}
+
+				// Only add window if we got to document (e.g., not plain obj or detached DOM)
+				if ( tmp === (elem.ownerDocument || document) ) {
+					eventPath.push( tmp.defaultView || tmp.parentWindow || window );
+				}
+			}
+
+			// Fire handlers on the event path
+			i = 0;
+			while ( (cur = eventPath[i++]) && !event.isPropagationStopped() ) {
+
+				event.type = i > 1 ?
+					bubbleType :
+					special.bindType || type;
+
+				// jQuery handler
+				handle = ( cacheUtil._data( cur, "events" ) || {} )[ event.type ] && cacheUtil._data( cur, "handle" );
+				if ( handle ) {
+					handle.apply( cur, data );
+				}
+
+				// Native handler
+				handle = ontype && cur[ ontype ];
+				if ( handle && handle.apply && cacheUtil.acceptData( cur ) ) {
+					event.result = handle.apply( cur, data );
+					if ( event.result === false ) {
+						event.preventDefault();
+					}
+				}
+			}
+			event.type = type;
+
+			// If nobody prevented the default action, do it now
+			if ( !onlyHandlers && !event.isDefaultPrevented() ) {
+
+				if ( (!special._default || special._default.apply( eventPath.pop(), data ) === false) &&
+					cacheUtil.acceptData( elem ) ) {
+
+					// Call a native DOM method on the target with the same name name as the event.
+					// Can't use an .isFunction() check here because IE6/7 fails that test.
+					// Don't do default actions on window, that's where global variables be (#6170)
+					if ( ontype && elem[ type ] && !objectUtil.isWindow( elem ) ) {
+
+						// Don't re-trigger an onFOO event when we call its FOO() method
+						tmp = elem[ ontype ];
+
+						if ( tmp ) {
+							elem[ ontype ] = null;
+						}
+
+						// Prevent re-triggering of the same event, since we already bubbled it above
+						EventHandler.triggered = type;
+						try {
+							elem[ type ]();
+						} catch ( e ) {
+							// IE<9 dies on focus/blur to hidden element (#1486,#12518)
+							// only reproducible on winXP IE8 native, not IE9 in IE8 mode
+						}
+						EventHandler.triggered = undefined;
+
+						if ( tmp ) {
+							elem[ ontype ] = tmp;
+						}
+					}
+				}
+			}
+
+			return event.result;
+		},
+
+		dispatch: function( event ) {
+
+			// Make a writable jQuery.Event from the native event object
+			event = EventHandler.fix( event );
+			var i, ret, handleObj, matched, j,
+				handlerQueue = [],
+				args = [].slice.call( arguments ),
+				handlers = ( cacheUtil._data( this, "events" ) || {} )[ event.type ] || [],
+				special = EventHandler.special[ event.type ] || {};
+
+			// Use the fix-ed jQuery.Event rather than the (read-only) native event
+			args[0] = event;
+			event.delegateTarget = this;
+
+			// Call the preDispatch hook for the mapped type, and let it bail if desired
+			if ( special.preDispatch && special.preDispatch.call( this, event ) === false ) {
+				return;
+			}
+
+			// Determine handlers
+			handlerQueue = EventHandler.handlers.call( this, event, handlers );
+
+			// Run delegates first; they may want to stop propagation beneath us
+			i = 0;
+			while ( (matched = handlerQueue[ i++ ]) && !event.isPropagationStopped() ) {
+				event.currentTarget = matched.elem;
+
+				j = 0;
+				while ( (handleObj = matched.handlers[ j++ ]) && !event.isImmediatePropagationStopped() ) {
+
+					// Triggered event must either 1) have no namespace, or
+					// 2) have namespace(s) a subset or equal to those in the bound event (both can have no namespace).
+					if ( !event.namespace_re || event.namespace_re.test( handleObj.namespace ) ) {
+
+						event.handleObj = handleObj;
+						event.data = handleObj.data;
+
+						ret = ( (EventHandler.special[ handleObj.origType ] || {}).handle || handleObj.handler )
+								.apply( matched.elem, args );
+
+						if ( ret !== undefined ) {
+							if ( (event.result = ret) === false ) {
+								event.preventDefault();
+								event.stopPropagation();
+							}
+						}
+					}
+				}
+			}
+
+			// Call the postDispatch hook for the mapped type
+			if ( special.postDispatch ) {
+				special.postDispatch.call( this, event );
+			}
+
+			return event.result;
+		},
+
+		handlers: function( event, handlers ) {
+			var sel, handleObj, matches, i,
+				handlerQueue = [],
+				delegateCount = handlers.delegateCount,
+				cur = event.target;
+
+			// Find delegate handlers
+			// Black-hole SVG <use> instance trees (#13180)
+			// Avoid non-left-click bubbling in Firefox (#3861)
+			if ( delegateCount && cur.nodeType && (!event.button || event.type !== "click") ) {
+
+				/* jshint eqeqeq: false */
+				for ( ; cur != this; cur = cur.parentNode || this ) {
+					/* jshint eqeqeq: true */
+
+					// Don't check non-elements (#13208)
+					// Don't process clicks on disabled elements (#6911, #8165, #11382, #11764)
+					if ( cur.nodeType === 1 && (cur.disabled !== true || event.type !== "click") ) {
+						matches = [];
+						for ( i = 0; i < delegateCount; i++ ) {
+							handleObj = handlers[ i ];
+
+							// Don't conflict with Object.prototype properties (#13203)
+							sel = handleObj.selector + " ";
+
+							if ( matches[ sel ] === undefined ) {
+								// matches[ sel ] = handleObj.needsContext ?
+								// 	this.querySelectorAll( sel ).index( cur ) >= 0 :
+								// 	jQuery.find( sel, this, null, [ cur ] ).length;
+								matches[ sel ] = this.querySelectorAll( sel ).index( cur ) >= 0;
+							}
+							if ( matches[ sel ] ) {
+								matches.push( handleObj );
+							}
+						}
+						if ( matches.length ) {
+							handlerQueue.push({ elem: cur, handlers: matches });
+						}
+					}
+				}
+			}
+
+			// Add the remaining (directly-bound) handlers
+			if ( delegateCount < handlers.length ) {
+				handlerQueue.push({ elem: this, handlers: handlers.slice( delegateCount ) });
+			}
+
+			return handlerQueue;
+		},
+
+		fix: function( event ) {
+			if ( event[ cacheUtil.expando ] ) {
+				return event;
+			}
+
+			// Create a writable copy of the event object and normalize some properties
+			var i, prop, copy,
+				type = event.type,
+				originalEvent = event,
+				fixHook = this.fixHooks[ type ];
+
+			if ( !fixHook ) {
+				this.fixHooks[ type ] = fixHook =
+					rmouseEvent.test( type ) ? this.mouseHooks :
+					rkeyEvent.test( type ) ? this.keyHooks :
+					{};
+			}
+			copy = fixHook.props ? this.props.concat( fixHook.props ) : this.props;
+
+			event = new EventHandler.Event( originalEvent );
+
+			i = copy.length;
+			while ( i-- ) {
+				prop = copy[ i ];
+				event[ prop ] = originalEvent[ prop ];
+			}
+
+			// Support: IE<9
+			// Fix target property (#1925)
+			if ( !event.target ) {
+				event.target = originalEvent.srcElement || document;
+			}
+
+			// Support: Chrome 23+, Safari?
+			// Target should not be a text node (#504, #13143)
+			if ( event.target.nodeType === 3 ) {
+				event.target = event.target.parentNode;
+			}
+
+			// Support: IE<9
+			// For mouse/key events, metaKey==false if it's undefined (#3368, #11328)
+			event.metaKey = !!event.metaKey;
+
+			return fixHook.filter ? fixHook.filter( event, originalEvent ) : event;
+		},
+
+		// Includes some event props shared by KeyEvent and MouseEvent
+		props: "altKey bubbles cancelable ctrlKey currentTarget eventPhase metaKey relatedTarget shiftKey target timeStamp view which".split(" "),
+
+		fixHooks: {},
+
+		keyHooks: {
+			props: "char charCode key keyCode".split(" "),
+			filter: function( event, original ) {
+
+				// Add which for key events
+				if ( event.which == null ) {
+					event.which = original.charCode != null ? original.charCode : original.keyCode;
+				}
+
+				return event;
+			}
+		},
+
+		mouseHooks: {
+			props: "button buttons clientX clientY fromElement offsetX offsetY pageX pageY screenX screenY toElement".split(" "),
+			filter: function( event, original ) {
+				var body, eventDoc, doc,
+					button = original.button,
+					fromElement = original.fromElement;
+
+				// Calculate pageX/Y if missing and clientX/Y available
+				if ( event.pageX == null && original.clientX != null ) {
+					eventDoc = event.target.ownerDocument || document;
+					doc = eventDoc.documentElement;
+					body = eventDoc.body;
+
+					event.pageX = original.clientX + ( doc && doc.scrollLeft || body && body.scrollLeft || 0 ) - ( doc && doc.clientLeft || body && body.clientLeft || 0 );
+					event.pageY = original.clientY + ( doc && doc.scrollTop  || body && body.scrollTop  || 0 ) - ( doc && doc.clientTop  || body && body.clientTop  || 0 );
+				}
+
+				// Add relatedTarget, if necessary
+				if ( !event.relatedTarget && fromElement ) {
+					event.relatedTarget = fromElement === event.target ? original.toElement : fromElement;
+				}
+
+				// Add which for click: 1 === left; 2 === middle; 3 === right
+				// Note: button is not normalized, so don't use it
+				if ( !event.which && button !== undefined ) {
+					event.which = ( button & 1 ? 1 : ( button & 2 ? 3 : ( button & 4 ? 2 : 0 ) ) );
+				}
+
+				return event;
+			}
+		},
+
+		special: {
+			load: {
+				// Prevent triggered image.load events from bubbling to window.load
+				noBubble: true
+			},
+			focus: {
+				// Fire native event if possible so blur/focus sequence is correct
+				trigger: function() {
+					if ( this !== safeActiveElement() && this.focus ) {
+						try {
+							this.focus();
+							return false;
+						} catch ( e ) {
+							// Support: IE<9
+							// If we error on focus to hidden element (#1486, #12518),
+							// let .trigger() run the handlers
+						}
+					}
+				},
+				delegateType: "focusin"
+			},
+			blur: {
+				trigger: function() {
+					if ( this === safeActiveElement() && this.blur ) {
+						this.blur();
+						return false;
+					}
+				},
+				delegateType: "focusout"
+			},
+			click: {
+				// For checkbox, fire native event so checked state will be right
+				trigger: function() {
+					if ( htmlElementUtil.nodeName( this, "input" ) && this.type === "checkbox" && this.click ) {
+						this.click();
+						return false;
+					}
+				},
+
+				// For cross-browser consistency, don't fire native .click() on links
+				_default: function( event ) {
+					return htmlElementUtil.nodeName( event.target, "a" );
+				}
+			},
+
+			beforeunload: {
+				postDispatch: function( event ) {
+
+					// Support: Firefox 20+
+					// Firefox doesn't alert if the returnValue field is not set.
+					if ( event.result !== undefined && event.originalEvent ) {
+						event.originalEvent.returnValue = event.result;
+					}
+				}
+			}
+		},
+
+		simulate: function( type, elem, event, bubble ) {
+			// Piggyback on a donor event to simulate a different one.
+			// Fake originalEvent to avoid donor's stopPropagation, but if the
+			// simulated event prevents default then we do the same on the donor.
+			var e = objectUtil.extend(
+				new EventHandler.Event(),
+				event,
+				{
+					type: type,
+					isSimulated: true,
+					originalEvent: {}
+				}
+			);
+			if ( bubble ) {
+				EventHandler.trigger( e, null, elem );
+			} else {
+				EventHandler.dispatch.call( elem, e );
+			}
+			if ( e.isDefaultPrevented() ) {
+				event.preventDefault();
+			}
+		},
+		removeEvent: document.removeEventListener ?
+			function( elem, type, handle ) {
+				if ( elem.removeEventListener ) {
+					elem.removeEventListener( type, handle, false );
+				}
+			} :
+			function( elem, type, handle ) {
+				var name = "on" + type;
+
+				if ( elem.detachEvent ) {
+
+					// #8545, #7054, preventing memory leaks for custom events in IE6-8
+					// detachEvent needed property on element, by name of that event, to properly expose it to GC
+					if ( typeof elem[ name ] === strundefined ) {
+						elem[ name ] = null;
+					}
+
+					elem.detachEvent( name, handle );
+				}
+			}
+
+	};
+
+	EventHandler.Event = function( src, props ) {
+		// Allow instantiation without the 'new' keyword
+		if ( !(this instanceof EventHandler.Event) ) {
+			return new EventHandler.Event( src, props );
+		}
+
+		// Event object
+		if ( src && src.type ) {
+			this.originalEvent = src;
+			this.type = src.type;
+
+			// Events bubbling up the document may have been marked as prevented
+			// by a handler lower down the tree; reflect the correct value.
+			this.isDefaultPrevented = src.defaultPrevented ||
+					src.defaultPrevented === undefined &&
+					// Support: IE < 9, Android < 4.0
+					src.returnValue === false ?
+				returnTrue :
+				returnFalse;
+
+		// Event type
+		} else {
+			this.type = src;
+		}
+
+		// Put explicitly provided properties onto the event object
+		if ( props ) {
+			objectUtil.extend( this, props );
+		}
+
+		// Create a timestamp if incoming event doesn't have one
+		this.timeStamp = src && src.timeStamp || datetimeUtil.now();
+
+		// Mark it as fixed
+		this[ cacheUtil.expando ] = true;
+	};
+
+	// jQuery.Event is based on DOM3 Events as specified by the ECMAScript Language Binding
+	// http://www.w3.org/TR/2003/WD-DOM-Level-3-Events-20030331/ecma-script-binding.html
+	EventHandler.Event.prototype = {
+		isDefaultPrevented: returnFalse,
+		isPropagationStopped: returnFalse,
+		isImmediatePropagationStopped: returnFalse,
+
+		preventDefault: function() {
+			var e = this.originalEvent;
+
+			this.isDefaultPrevented = returnTrue;
+			if ( !e ) {
+				return;
+			}
+
+			// If preventDefault exists, run it on the original event
+			if ( e.preventDefault ) {
+				e.preventDefault();
+
+			// Support: IE
+			// Otherwise set the returnValue property of the original event to false
+			} else {
+				e.returnValue = false;
+			}
+		},
+		stopPropagation: function() {
+			var e = this.originalEvent;
+
+			this.isPropagationStopped = returnTrue;
+			if ( !e ) {
+				return;
+			}
+			// If stopPropagation exists, run it on the original event
+			if ( e.stopPropagation ) {
+				e.stopPropagation();
+			}
+
+			// Support: IE
+			// Set the cancelBubble property of the original event to true
+			e.cancelBubble = true;
+		},
+		stopImmediatePropagation: function() {
+			var e = this.originalEvent;
+
+			this.isImmediatePropagationStopped = returnTrue;
+
+			if ( e && e.stopImmediatePropagation ) {
+				e.stopImmediatePropagation();
+			}
+
+			this.stopPropagation();
+		}
+	};
+
+	objectUtil.bundleExtend([
+		HTMLElement.prototype, 
+		HTMLCollection.prototype, 
+		NodeList.prototype
+		], 
+		EventHandler);
+
+	module.exports = EventHandler;
+
+/***/ },
+/* 7 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var arrayUtil = __webpack_require__(5);
+
+	var class2type = {},
+		toString = class2type.toString,
+		hasOwn = ({}).hasOwnProperty;
+
+	var ObjectUtil = {
+	    extend: function() {
+			var src, copyIsArray, copy, name, options, clone,
+				target = arguments[0] || {},
+				i = 1,
+				length = arguments.length,
+				deep = false;
+
+			// Handle a deep copy situation
+			if ( typeof target === "boolean" ) {
+				deep = target;
+
+				// skip the boolean and the target
+				target = arguments[ i ] || {};
+				i++;
+			}
+
+			// Handle case when target is a string or something (possible in deep copy)
+			if ( typeof target !== "object" && !ObjectUtil.isFunction(target) ) {
+				target = {};
+			}
+
+			// extend jQuery itself if only one argument is passed
+			if ( i === length ) {
+				target = this;
+				i--;
+			}
+
+			for ( ; i < length; i++ ) {
+				// Only deal with non-null/undefined values
+				if ( (options = arguments[ i ]) != null ) {
+					// Extend the base object
+					for ( name in options ) {
+						src = target[ name ];
+						copy = options[ name ];
+
+						// Prevent never-ending loop
+						if ( target === copy ) {
+							continue;
+						}
+
+						// Recurse if we're merging plain objects or arrays
+						if ( deep && copy && ( ObjectUtil.isPlainObject(copy) || (copyIsArray = arrayUtil.isArray(copy)) ) ) {
+							if ( copyIsArray ) {
+								copyIsArray = false;
+								clone = src && arrayUtil.isArray(src) ? src : [];
+
+							} else {
+								clone = src && ObjectUtil.isPlainObject(src) ? src : {};
+							}
+
+							// Never move original objects, clone them
+							target[ name ] = ObjectUtil.extend( deep, clone, copy );
+
+						// Don't bring in undefined values
+						} else if ( copy !== undefined ) {
+							target[ name ] = copy;
+						}
+					}
+				}
+			}
+
+			// Return the modified object
+			return target;
+		},
+		bundleExtend: function(){
+			var list = arguments[0];
+			var args = [].slice.call(arguments, 1);
+			arrayUtil.forEach(list, function(){
+				ObjectUtil.extend.apply(null, [this].concat(args))
+			})
+		},
+		isPlainObject: function( obj ) {
+			var key;
+
+			// Must be an Object.
+			// Because of IE, we also have to check the presence of the constructor property.
+			// Make sure that DOM nodes and window objects don't pass through, as well
+			if ( !obj || ObjectUtil.type(obj) !== "object" || obj.nodeType || ObjectUtil.isWindow( obj ) ) {
+				return false;
+			}
+
+			try {
+				// Not own constructor property must be Object
+				if ( obj.constructor &&
+					!hasOwn.call(obj, "constructor") &&
+					!hasOwn.call(obj.constructor.prototype, "isPrototypeOf") ) {
+					return false;
+				}
+			} catch ( e ) {
+				// IE8,9 Will throw exceptions on certain host objects #9897
+				return false;
+			}
+
+			// Support: IE<9
+			// Handle iteration over inherited properties before own properties.
+			if ( support.ownLast ) {
+				for ( key in obj ) {
+					return hasOwn.call( obj, key );
+				}
+			}
+
+			// Own properties are enumerated firstly, so to speed up,
+			// if last one is own, then all properties are own.
+			for ( key in obj ) {}
+
+			return key === undefined || hasOwn.call( obj, key );
+		},
+		isEmptyObject: function( obj ) {
+			var name;
+			for ( name in obj ) {
+				return false;
+			}
+			return true;
+		},
+		// See test/unit/core.js for details concerning isFunction.
+		// Since version 1.3, DOM methods and functions like alert
+		// aren't supported. They return false on IE (#2968).
+		isFunction: function( obj ) {
+			return ObjectUtil.type(obj) === "function";
+		},
+		isWindow: function( obj ) {
+			/* jshint eqeqeq: false */
+			return obj != null && obj == obj.window;
+		},
+		type: function( obj ) {
+			if ( obj == null ) {
+				return obj + "";
+			}
+			return typeof obj === "object" || typeof obj === "function" ?
+				class2type[ toString.call(obj) ] || "object" :
+				typeof obj;
+		},
+		/**
+	    * 对象映射转换器，返回一个新的对象。
+	    * @param {Object} obj 要进行迭代处理的对象
+	    * @param {function} fn 要进行迭代处理的回调函数，该函数中会接收到当前对象迭代的到 key 和 value 作为参数
+	    * @param {boolean} [isDeep=false] 指示是否要进行深层次的迭代。
+	        如果是，请指定 true；
+	        否则请指定 false 或不指定。
+	        默认为 false，即浅迭代
+	    * @return {Object} 返回一个新的对象，key 仍为原来的 key，value 由回调函数得到
+	    * @example
+	        var obj = {a: 1, b: 2, c: {A: 11, B: 22} };
+	        var obj2 = $.Object.map(obj, function(key, value) {
+	            return value * 100;
+	        }, true);
+	        console.dir(obj2);
+	    结果：
+	        obj2 = {a: 100, b: 200, c: {A: 1100, B: 2200}};
+	    */
+	    map: function (obj, fn, isDeep) {
+	        var map = arguments.callee; //引用自身，用于递归
+	        var target = {};
+
+	        for (var key in obj) {
+	            var value = obj[key];
+
+	            if (isDeep && exports.isPlain(value)) { //指定了深迭代，并且当前 value 为纯对象
+	                target[key] = map(value, fn, isDeep); //递归
+	            }
+	            else {
+	                target[key] = fn.call(value, key, value);
+	            }
+	        }
+
+	        return target;
+	    },
+	    /**
+	    * 对一个对象进行迭代。
+	    * 该方法可以代替 for in 的语句。
+	    * 只有在回调函数中明确返回 false 才停止循环。
+	    * @param {Object} obj 要进行迭代处理的对象
+	    * @param {function} fn 要进行迭代处理的回调函数，该函数中会接收到当前对象迭代的到 key 和 value 作为参数
+	    * @param {boolean} [isDeep=false] 
+	        指示是否要进行深层次的迭代，如果是，请指定 true；
+	        否则请指定 false 或不指定。默认为 false，即浅迭代
+	    * @example
+	        var obj = {a: 1, b: 2, c: {A: 11, B: 22} };
+	        $.Object.each(obj, function(key, value) {
+	            console.log(key, ': ', value);
+	        }, true);
+	    输出：
+	        a: 1,
+	        b: 2,
+	        A: 11,
+	        B: 22
+	    */
+	    forEach: function (obj, fn, isDeep) {
+
+	        var each = arguments.callee;
+
+	        for (var key in obj) {
+	            var value = obj[key];
+
+	            //指定了深迭代，并且当前 value 为非 null 的对象
+	            if (isDeep === true && value && typeof value == 'object') {
+	                each(value, fn, true); //递归
+	            }
+	            else {
+	                // 只有在 fn 中明确返回 false 才停止循环
+	                if (fn.call(value, key, value) === false) {
+	                    break;
+	                }
+	            }
+	        }
+	    },
+	};
+
+	module.exports = ObjectUtil;
+
+/***/ },
+/* 8 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var objectUtil = __webpack_require__(7);
+	var arrayUtil = __webpack_require__(5);
+	var transferUtil = __webpack_require__(9);
+	var eventHandler = __webpack_require__(6);
+
+	var deletedIds = [];
+
+	var internalData = function ( elem, name, data, pvt /* Internal Use Only */ ) {
+		if ( !Cache.acceptData( elem ) ) {
+			return;
+		}
+		var ret, thisCache,
+			internalKey = Cache.expando,
+
+			// We have to handle DOM nodes and JS objects differently because IE6-7
+			// can't GC object references properly across the DOM-JS boundary
+			isNode = elem.nodeType,
+
+			// Only DOM nodes need the global jQuery cache; JS object data is
+			// attached directly to the object so GC can occur automatically
+			cache = isNode ? Cache.space : elem,
+
+			// Only defining an ID for JS objects if its cache already exists allows
+			// the code to shortcut on the same path as a DOM node with no cache
+			id = isNode ? elem[ internalKey ] : elem[ internalKey ] && internalKey;
+
+		// Avoid doing any more work than we need to when trying to get data on an
+		// object that has no data at all
+		if ( (!id || !cache[id] || (!pvt && !cache[id].data)) && data === undefined && typeof name === "string" ) {
+			return;
+		}
+
+		if ( !id ) {
+			// Only DOM nodes need a new unique ID for each element since their data
+			// ends up in the global cache
+			if ( isNode ) {
+				id = elem[ internalKey ] = deletedIds.pop() || Cache.guid++;
+			} else {
+				id = internalKey;
+			}
+		}
+
+		if ( !cache[ id ] ) {
+			// Avoid exposing jQuery metadata on plain JS objects when the object
+			// is serialized using JSON.stringify
+			cache[ id ] = isNode ? {} : { toJSON: function(){} };
+		}
+
+		// An object can be passed to jQuery.data instead of a key/value pair; this gets
+		// shallow copied over onto the existing cache
+		if ( typeof name === "object" || typeof name === "function" ) {
+			if ( pvt ) {
+				cache[ id ] = objectUtil.extend( cache[ id ], name );
+			} else {
+				cache[ id ].data = objectUtil.extend( cache[ id ].data, name );
+			}
+		}
+
+		thisCache = cache[ id ];
+
+		// jQuery data() is stored in a separate object inside the object's internal data
+		// cache in order to avoid key collisions between internal data and user-defined
+		// data.
+		if ( !pvt ) {
+			if ( !thisCache.data ) {
+				thisCache.data = {};
+			}
+
+			thisCache = thisCache.data;
+		}
+
+		if ( data !== undefined ) {
+			thisCache[ transferUtil.camelCase( name ) ] = data;
+		}
+
+		// Check for both converted-to-camel and non-converted data property names
+		// If a data property was specified
+		if ( typeof name === "string" ) {
+
+			// First Try to find as-is property data
+			ret = thisCache[ name ];
+
+			// Test for null|undefined property data
+			if ( ret == null ) {
+
+				// Try to find the camelCased property
+				ret = thisCache[ transferUtil.camelCase( name ) ];
+			}
+		} else {
+			ret = thisCache;
+		}
+
+		return ret;
+	}
+
+	function internalRemoveData( elem, name, pvt ) {
+		if ( !Cache.acceptData( elem ) ) {
+			return;
+		}
+
+		var thisCache, i,
+			isNode = elem.nodeType,
+
+			// See jQuery.data for more information
+			cache = isNode ? Cache.space : elem,
+			id = isNode ? elem[ Cache.expando ] : Cache.expando;
+
+		// If there is already no cache entry for this object, there is no
+		// purpose in continuing
+		if ( !cache[ id ] ) {
+			return;
+		}
+
+		if ( name ) {
+
+			thisCache = pvt ? cache[ id ] : cache[ id ].data;
+
+			if ( thisCache ) {
+
+				// Support array or space separated string names for data keys
+				if ( !arrayUtil.isArray( name ) ) {
+
+					// try the string as a key before any manipulation
+					if ( name in thisCache ) {
+						name = [ name ];
+					} else {
+
+						// split the camel cased version by spaces unless a key with the spaces exists
+						name = transferUtil.camelCase( name );
+						if ( name in thisCache ) {
+							name = [ name ];
+						} else {
+							name = name.split(" ");
+						}
+					}
+				} else {
+					// If "name" is an array of keys...
+					// When data is initially created, via ("key", "val") signature,
+					// keys will be converted to camelCase.
+					// Since there is no way to tell _how_ a key was added, remove
+					// both plain key and camelCase key. #12786
+					// This will only penalize the array argument path.
+					name = name.concat( arrayUtil.map( name, transferUtil.camelCase ) );
+				}
+
+				i = name.length;
+				while ( i-- ) {
+					delete thisCache[ name[i] ];
+				}
+
+				// If there is no data left in the cache, we want to continue
+				// and let the cache object itself get destroyed
+				if ( pvt ? !isEmptyDataObject(thisCache) : !objectUtil.isEmptyObject(thisCache) ) {
+					return;
+				}
+			}
+		}
+
+		// See jQuery.data for more information
+		if ( !pvt ) {
+			delete cache[ id ].data;
+
+			// Don't destroy the parent cache unless the internal data object
+			// had been the only thing left in it
+			if ( !isEmptyDataObject( cache[ id ] ) ) {
+				return;
+			}
+		}
+
+		// Destroy the cache
+		if ( isNode ) {
+			cleanData( [ elem ], true );
+
+		// Use delete when supported for expandos or `cache` is not a window per isWindow (#10080)
+		/* jshint eqeqeq: false */
+		} else if ( support.deleteExpando || cache != cache.window ) {
+			/* jshint eqeqeq: true */
+			delete cache[ id ];
+
+		// When all else fails, null
+		} else {
+			cache[ id ] = null;
+		}
+	}
+
+	var cleanData = function( elems, /* internal */ acceptData ) {
+		var elem, type, id, data,
+			i = 0,
+			internalKey = Cache.expando,
+			cache = Cache.space,
+			deleteExpando = support.deleteExpando,
+			special = eventHandler.event.special;
+
+		for ( ; (elem = elems[i]) != null; i++ ) {
+			if ( acceptData || Cache.acceptData( elem ) ) {
+
+				id = elem[ internalKey ];
+				data = id && cache[ id ];
+
+				if ( data ) {
+					if ( data.events ) {
+						for ( type in data.events ) {
+							if ( special[ type ] ) {
+								eventHandler.event.remove( elem, type );
+
+							// This is a shortcut to avoid jQuery.event.remove's overhead
+							} else {
+								eventHandler.removeEvent( elem, type, data.handle );
+							}
+						}
+					}
+
+					// Remove cache only if it was not already removed by jQuery.event.remove
+					if ( cache[ id ] ) {
+
+						delete cache[ id ];
+
+						// IE does not allow us to delete expando properties from nodes,
+						// nor does it have a removeAttribute function on Document nodes;
+						// we must handle all of these cases
+						if ( deleteExpando ) {
+							delete elem[ internalKey ];
+
+						} else if ( typeof elem.removeAttribute !== strundefined ) {
+							elem.removeAttribute( internalKey );
+
+						} else {
+							elem[ internalKey ] = null;
+						}
+
+						deletedIds.push( id );
+					}
+				}
+			}
+		}
+	}
+
+	var Cache = {
+		expando: 'unique' + Math.random().toString().slice(2),
+		guid: 1,
+		space: {},
+		noData: {
+			"applet ": true,
+			"embed ": true,
+			// ...but Flash objects (which have this classid) *can* handle expandos
+			"object ": "clsid:D27CDB6E-AE6D-11cf-96B8-444553540000"
+		},
+
+		hasData: function( elem ) {
+			elem = elem.nodeType ? Cache.space[ elem[Cache.expando] ] : elem[ Cache.expando ];
+			return !!elem && !isEmptyDataObject( elem );
+		},
+
+		data: function( elem, name, data ) {
+			return internalData( elem, name, data );
+		},
+
+		removeData: function( elem, name ) {
+			return internalRemoveData( elem, name );
+		},
+
+		// For internal use only.
+		_data: function( elem, name, data ) {
+			return internalData( elem, name, data, true );
+		},
+
+		_removeData: function( elem, name ) {
+			return internalRemoveData( elem, name, true );
+		},
+
+		acceptData: function( elem ) {
+			var noData = Cache.noData[ (elem.nodeName + " ").toLowerCase() ],
+				nodeType = +elem.nodeType || 1;
+
+			// Do not set data on non-element DOM nodes because it will not be cleared (#8335).
+			return nodeType !== 1 && nodeType !== 9 ?
+				false :
+
+				// Nodes accept data unless otherwise specified; rejection can be conditional
+				!noData || noData !== true && elem.getAttribute("classid") === noData;
+		}
+	}
+
+	module.exports = Cache;
+
+/***/ },
+/* 9 */
+/***/ function(module, exports) {
+
+	
+	var rmsPrefix = /^-ms-/,
+		rdashAlpha = /-([\da-z])/gi,
+
+		// Used by jQuery.camelCase as callback to replace()
+		fcamelCase = function( all, letter ) {
+			return letter.toUpperCase();
+		}
+
+	var Transfer = {
+		camelCase: function( string ) {
+			return string.replace( rmsPrefix, "ms-" ).replace( rdashAlpha, fcamelCase );
+		}
+	}
+
+	module.exports = Transfer;
+
+/***/ },
+/* 10 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var arrayUtil = __webpack_require__(5);
+	var objectUtil = __webpack_require__(7);
+	var transferUtil = __webpack_require__(9);
+
+	var whitespace = "[\\x20\\t\\r\\n\\f]",
+		rneedsContext = new RegExp( "^" + whitespace + "*[>+~]|:(even|odd|eq|gt|lt|nth|first|last)(?:\\(" +
+				whitespace + "*((?:-\\d)?\\d*)" + whitespace + "*\\)|)(?=[^-]|$)", "i" );
+	var rnative = /^[^{]+\{\s*\[native \w/;
+
+	var docElem = window.document.documentElement;
+
+	/* Contains
+		---------------------------------------------------------------------- */
+	var	hasCompare = rnative.test( docElem.compareDocumentPosition );
+
+	// Element contains another
+	// Purposefully does not implement inclusive descendent
+	// As in, an element does not contain itself
+
+	var contains = hasCompare || rnative.test( docElem.contains ) ?
+		function( a, b ) {
+			var adown = a.nodeType === 9 ? a.documentElement : a,
+				bup = b && b.parentNode;
+			return a === bup || !!( bup && bup.nodeType === 1 && (
+				adown.contains ?
+					adown.contains( bup ) :
+					a.compareDocumentPosition && a.compareDocumentPosition( bup ) & 16
+			));
+		} :
+		function( a, b ) {
+			if ( b ) {
+				while ( (b = b.parentNode) ) {
+					if ( b === a ) {
+						return true;
+					}
+				}
+			}
+			return false;
+		};
+
+	var risSimple = /^.[^:#\[\.,]*$/;
+
+	var filter = function(selector, elems){
+		var nodeList = selector;
+		if(typeof selector === 'string'){
+			nodeList = document.querySelectorAll(selector);
+		}else if(!HtmlElement.isDOMList(selector)){
+			nodeList = [selector];
+		}
+		return arrayUtil.grep(elems, function(elem){
+			return [].filter.call(nodeList, function(node){
+				return node === elem;
+			}).length > 0
+		})
+	}
+	// var filter = function( expr, elems, not ) {
+	// 		var elem = elems[ 0 ];
+
+	// 		if ( not ) {
+	// 			expr = ":not(" + expr + ")";
+	// 		}
+
+	// 		return elems.length === 1 && elem.nodeType === 1 ?
+	// 			jQuery.find.matchesSelector( elem, expr ) ? [ elem ] : [] :
+	// 			jQuery.find.matches( expr, arrayUtil.grep( elems, function( elem ) {
+	// 				return elem.nodeType === 1;
+	// 			}));
+	// 	};
+
+	// Implement the identical functionality for filter and not
+	function winnow( elements, qualifier, not ) {
+		
+		if ( objectUtil.isFunction( qualifier ) ) {
+			return arrayUtil.grep( elements, function( elem, i ) {
+				/* jshint -W018 */
+				return !!qualifier.call( elem, i, elem ) !== not;
+			});
+
+		}
+
+		if ( qualifier.nodeType ) {
+			return arrayUtil.grep( elements, function( elem ) {
+				return ( elem === qualifier ) !== not;
+			});
+
+		}
+
+		if ( typeof qualifier === "string" ) {
+			if ( risSimple.test( qualifier ) ) {
+				return filter( qualifier, elements, not );
+			}
+
+			qualifier = filter( qualifier, elements );
+		}
+
+		return arrayUtil.grep( elements, function( elem ) {
+			return ( arrayUtil.inArray( elem, qualifier ) >= 0 ) !== not;
+		});
+	}
+
+
+	var HtmlElement = {
+		nodeName: function( elem, name ) {
+			return elem.nodeName && elem.nodeName.toLowerCase() === name.toLowerCase();
+		},
+		dir: function( elem, dir, until ) {
+			var matched = [],
+				cur = elem[ dir ];
+				
+			while ( cur && cur.nodeType !== 9 && (until === undefined || cur.nodeType !== 1 || !cur.is( until )) ) {
+				if ( cur.nodeType === 1 ) {
+					matched.push( cur );
+				}
+				cur = cur[dir];
+			}
+			return matched;
+		},
+		sibling: function( n, elem ) {
+			var r = [];
+
+			for ( ; n; n = n.nextSibling ) {
+				if ( n.nodeType === 1 && n !== elem ) {
+					r.push( n );
+				}
+			}
+
+			return r;
+		},
+		isDOMList: function(node){
+			return node instanceof NodeList || node instanceof HTMLCollection;
+		}
+	}
+
+	function sibling( cur, dir ) {
+		do {
+			cur = cur[ dir ];
+		} while ( cur && cur.nodeType !== 1 );
+
+		return cur;
+	}
+
+	var Methods = {
+		find: function( selector ) {
+			var i,
+				ret = [],
+				nodeList = HtmlElement.isDOMList(this) ? this : [this],
+				len = self.length,
+				exist;
+
+			if ( typeof selector !== "string" ) {
+				// return this.pushStack( selector.filter(function() {
+				// 	for ( i = 0; i < len; i++ ) {
+				// 		if ( contains( self[ i ], this ) ) {
+				// 			return true;
+				// 		}
+				// 	}
+				// }) );
+				arrayUtil.forEach(nodeList, function(node, index){
+					if ( contains( self[ i ], this ) ) {
+						exist = true;
+						return false;
+					}
+				});
+				if(exist){
+					return [selector];
+				}else{
+					return [];
+				}
+			}
+
+			// for ( i = 0; i < len; i++ ) {
+			// 	jQuery.find( selector, self[ i ], ret );
+			// }
+
+			// // Needed because $( selector, context ) becomes $( context ).find( selector )
+			// ret = this.pushStack( len > 1 ? jQuery.unique( ret ) : ret );
+			// ret.selector = this.selector ? this.selector + " " + selector : selector;
+			// return ret;
+			return this.querySelectorAll(selector)
+		},
+		// filter: function( selector ) {
+		// 	return this.pushStack( winnow(this, selector || [], false) );
+		// },
+		// not: function( selector ) {
+		// 	return this.pushStack( winnow(this, selector || [], true) );
+		// },
+		is: function( selector ) {
+			return !!winnow(
+				this,
+
+				// If this is a positional/relative selector, check membership in the returned set
+				// so $("p:first").is("p:last") won't return true for a doc with two "p".
+				typeof selector === "string" && rneedsContext.test( selector ) ?
+					document.querySelectorAll(selector) :
+					selector || [],
+				false
+			).length;
+		},
+		// has: function( target ) {
+		// 	var i,
+		// 		targets = jQuery( target, this ),
+		// 		len = targets.length;
+
+		// 	return this.filter(function() {
+		// 		for ( i = 0; i < len; i++ ) {
+		// 			if ( contains( this, targets[i] ) ) {
+		// 				return true;
+		// 			}
+		// 		}
+		// 	});
+		// },
+
+		// Determine the position of an element within
+		// the matched set of elements
+		index: function( elem ) {
+
+			var self = HtmlElement.isDOMList(this) ? this[0] : this;
+
+			// No argument, return index in parent
+			if ( !elem ) {
+				return ( self && self.parentNode ) ? self.prevAll().length : -1;
+			}
+
+			// index in selector
+			if ( typeof elem === "string" ) {
+				return arrayUtil.inArray( self, document.querySelectorAll(elem) );
+			}
+
+			// Locate the position of the desired element
+			return arrayUtil.inArray(
+				// If it receives a jQuery object, the first element is used
+				elem, HtmlElement.isDOMList(this) ? this : [this] );
+		},
+
+		// add: function( selector, context ) {
+		// 	return this.pushStack(
+		// 		jQuery.unique(
+		// 			arrayUtil.merge( this.get(), jQuery( selector, context ) )
+		// 		)
+		// 	);
+		// },
+
+		// addBack: function( selector ) {
+		// 	return this.add( selector == null ?
+		// 		this.prevObject : this.prevObject.filter(selector)
+		// 	);
+		// },
+
+		first: function() {
+			return this.eq( 0 );
+		},
+
+		last: function() {
+			return this.eq( -1 );
+		},
+
+		eq: function( i ) {
+			var len = this.length,
+				j = +i + ( i < 0 ? len : 0 );
+			return this.pushStack( j >= 0 && j < len ? [ this[j] ] : [] );
+		},
+
+		end: function() {
+			return this.prevObject || this.constructor(null);
+		},
+
+	    // Take an array of elements and push it onto the stack
+	    // (returning the new matched element set)
+	    pushStack: function( elems ) {
+	        // Build a new jQuery matched element set
+	        // var ret = arrayUtil.merge( this.constructor(), elems );
+	        var ret = elems;
+
+	        // Add the old object onto the stack (as a reference)
+	        ret.prevObject = this;
+	        ret.context = this.context;
+
+	        // Return the newly-formed element set
+	        return ret;
+	    }
+	};
+	var rparentsprev = /^(?:parents|prev(?:Until|All))/,
+		// methods guaranteed to produce a unique set when starting from a unique set
+		guaranteedUnique = {
+			children: true,
+			contents: true,
+			next: true,
+			prev: true
+		},
+		sortOrder = function( a, b ) {
+			if ( a === b ) {
+				hasDuplicate = true;
+			}
+			return 0;
+		};
+	objectUtil.forEach({
+		parent: function( elem ) {
+			var parent = elem.parentNode;
+			return parent && parent.nodeType !== 11 ? parent : null;
+		},
+		parents: function( elem ) {
+			return HtmlElement.dir( elem, "parentNode" );
+		},
+		parentsUntil: function( elem, i, until ) {
+			return HtmlElement.dir( elem, "parentNode", until );
+		},
+		next: function( elem ) {
+			return sibling( elem, "nextSibling" );
+		},
+		prev: function( elem ) {
+			return sibling( elem, "previousSibling" );
+		},
+		nextAll: function( elem ) {
+			return HtmlElement.dir( elem, "nextSibling" );
+		},
+		prevAll: function( elem ) {
+			return HtmlElement.dir( elem, "previousSibling" );
+		},
+		nextUntil: function( elem, i, until ) {
+			return HtmlElement.dir( elem, "nextSibling", until );
+		},
+		prevUntil: function( elem, i, until ) {
+			return HtmlElement.dir( elem, "previousSibling", until );
+		},
+		siblings: function( elem ) {
+			return HtmlElement.sibling( ( elem.parentNode || {} ).firstChild, elem );
+		},
+		kids: function( elem ) {
+			return HtmlElement.sibling( elem.firstChild );
+		},
+		contents: function( elem ) {
+			return HtmlElement.nodeName( elem, "iframe" ) ?
+				elem.contentDocument || elem.contentWindow.document :
+				arrayUtil.merge( [], elem.childNodes );
+		}
+	}, function(name, fn){
+		Methods[ name ] = function( until, selector ) {
+			var nodeList = HtmlElement.isDOMList(this) ? this : [this];
+			var ret = arrayUtil.map( nodeList, fn, until );
+
+			if ( name.slice( -5 ) !== "Until" ) {
+				selector = until;
+			}
+
+			if ( selector && typeof selector === "string" ) {
+				ret = filter( selector, ret );
+			}
+
+			if ( nodeList.length > 1 ) {
+				// Remove duplicates 
+				if ( !guaranteedUnique[ name ] ) {
+					ret = arrayUtil.unique( ret );
+				}
+
+				// Reverse order for parents* and prev-derivatives
+				if ( rparentsprev.test( name ) ) {
+					ret = ret.reverse();
+				}
+			}
+
+			return this.pushStack( ret );
+		};
+	})
+
+	objectUtil.forEach({
+	    addClass: function(name){
+	    	this.classList.add(name)
+	    },
+	    removeClass: function(name){
+	    	this.classList.remove(name)
+	    },
+	    toggleClass: function(name){
+	    	var classList = this.classList;
+	    	if(classList.contains(name)){
+	    		classList.remove(name);
+	    	}else{
+	    		classList.add(name);
+	    	}
+	    },
+	    css: function(name, value){
+	    	var _self = this;
+	    	if(typeof name == 'string'){
+	    		this.style[transferUtil.camelCase(name)] = value;
+	    		return;
+	    	}
+	    	objectUtil.forEach(name, function(key, value){
+	    		_self.style[key] = value
+	    	})
+
+	    }
+	}, function(name, fn){
+		Methods[ name ] = function() {
+			var nodeList = HtmlElement.isDOMList(this) ? this : [this];
+			var args = arguments;
+			var ret = arrayUtil.map( nodeList, function(){
+				fn.apply(this, args)
+			} );
+			return this;
+		};
+	})
+
+
+	objectUtil.bundleExtend([
+		HTMLElement.prototype, 
+		HTMLCollection.prototype, 
+		NodeList.prototype,
+		Array.prototype//为了支持链式调用
+		], 
+		Methods);
+
+
+	module.exports = HtmlElement;
+
+
+/***/ },
+/* 11 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var DOM = __webpack_require__(12);
+	var TransformStyle = __webpack_require__(2);
+	var Transition = __webpack_require__(13);
+	var Time = __webpack_require__(14);
+	var arrayUtil = __webpack_require__(5);
+	__webpack_require__(6);
+	__webpack_require__(17);
+
+	var Carousel = (function(){
 
 	  var transformStyle = TransformStyle;
 	  var transitionEnd = Transition.end;
@@ -750,13 +2876,13 @@
 	    else{
 	      this.scroller.parentNode.classList.add('stick');
 	    }
-	    $(this.scroller).find('.container').css('min-height', this.minHeight + 'px');
+	    this.scroller.querySelector('.container').style.minHeight = this.minHeight + 'px';
 
 	    this.meta = {};
 
 
 	    if(config.indicators){
-	      this.indicators = document.querySelector('#'+config.indicators).children;
+	      this.indicators = query(config.indicators).children;
 	    }
 
 
@@ -773,9 +2899,9 @@
 	    }
 	    
 
-	    $(this.scroller).delegate('.scroll', 'tap', function(){
+	    this.scroller.delegate('.scroll', 'tap', function(){
 	      
-	      var index = $(this).index();
+	      var index = this.index();
 
 	      if(index != self.index){
 	        self.active(index);
@@ -847,7 +2973,7 @@
 	        fn && fn()
 	      }, timeout);
 
-	      this.pages = $.map(this.scroller.children, function(item, index){
+	      this.pages = arrayUtil.map(this.scroller.children, function(item, index){
 
 	        var start = -index * unit;
 	        var end = start - unit;
@@ -1009,7 +3135,7 @@
 
 	      self.constrain();
 
-	      $.each(this.pages, function(index, item){
+	      arrayUtil.forEach(this.pages, function(item, index){
 
 	         if(self.position > item.end){
 
@@ -1137,7 +3263,7 @@
 	    },
 	    'activeIndicator':function(index){
 	      if(this.indicators){
-	        $(this.indicators[index]).addClass('selected').siblings().removeClass('selected');
+	        this.indicators[index].addClass('selected').siblings().removeClass('selected');
 	      }
 	    },
 	    'resetHeight': function(){
@@ -1157,7 +3283,8 @@
 
 	      // document.querySelector('#scroller').style.height = height + 'px';
 	      
-	      $(this.scroller).children().css('height', height + 'px');
+	      this.scroller.children.css('height', height + 'px');
+	      // $(this.scroller).children().css('height', height + 'px');
 
 	    },
 	    'scrollTop': function(){
@@ -1218,36 +3345,41 @@
 	  }
 	  return Carousel;
 	  
-	})($);
+	})();
 
 	module.exports = Carousel;
 
 /***/ },
-/* 6 */
+/* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var ArrayUtil = __webpack_require__(7);
+	var ArrayUtil = __webpack_require__(5);
+	__webpack_require__(6);
+
 	var DOM = (function(){
 		var tid;
 
-		function tap(container, selector, event, callback){
+		function tap(container, selector, type, callback){
 
 			var position = {};
+			if(typeof container == 'string'){
+				container = document.querySelectorAll(container);
+			}
 
-			$(container).delegate(selector, 'touchstart', function(ev){
+			container.delegate(selector, 'touchstart', function(ev){
 
 				// ev.preventDefault();
-				var touch = ev.changedTouches[0];
+				var touch = event.changedTouches[0];
 				tapStart(touch, position);
 
 
 			});
 
 
-			$(container).delegate(selector, 'touchend', function(ev){
+			container.delegate(selector, 'touchend', function(ev){
 
 
-				var touch = ev.changedTouches[0];
+				var touch = event.changedTouches[0];
 				tapEnd(touch, position, callback, this, function(){
 
 					ev.preventDefault();
@@ -1256,24 +3388,27 @@
 			});
 		}
 
-		function onTap(selector, event, callback){
+		function onTap(selector, type, callback){
 
 			var position = {};
+			if(typeof selector == 'string'){
+				selector = document.querySelectorAll(selector);
+			}
 
-			$(selector).on('touchstart', function(ev){
+			selector.on('touchstart', function(ev){
 
 				// ev.preventDefault();
-				var touch = ev.changedTouches[0];
+				var touch = event.changedTouches[0];
 				tapStart(touch, position);
 
 
 			});
 
 
-			$(selector).on('touchend', function(ev){
+			selector.on('touchend', function(ev){
 
 
-				var touch = ev.changedTouches[0];
+				var touch = event.changedTouches[0];
 				tapEnd(touch, position, callback, this, function(){
 
 					ev.preventDefault();
@@ -1320,34 +3455,34 @@
 			
 		}
 
-		function delegate(container, selector, event, callback){
+		function delegate(container, selector, type, callback){
 
-			if(event == 'tap'){
-				tap(container, selector, event, callback);
+			if(type == 'tap'){
+				tap(container, selector, type, callback);
 				return;
 			}
-			else if(event == 'click'){
+			else if(type == 'click'){
 
 				callback = getClickEvent(callback);
 				
 			}
 
-			$(container).delegate(selector, event, callback);
+			container.delegate(selector, type, callback);
 		}
 
-		function on(selector, event, callback){
+		function on(selector, type, callback){
 
-			if(event == 'tap'){
-				onTap(selector, event, callback);
+			if(type == 'tap'){
+				onTap(selector, type, callback);
 				return;
 			}
-			else if(event == 'click'){
+			else if(type == 'click'){
 
 				callback = getClickEvent(callback);
 				
 			}
 
-			document.querySelector(selector).addEventListener(event, callback);
+			document.querySelector(selector).addEventListener(type, callback);
 		}
 
 		function addClassOnly(obj, className, index){
@@ -1374,56 +3509,7 @@
 	module.exports = DOM;
 
 /***/ },
-/* 7 */
-/***/ function(module, exports) {
-
-	
-	var ArrayUtil = (function(){
-
-	  function findIndex(array, fn, startIndex) {
-	        startIndex = startIndex || 0;
-
-	        for (var i = startIndex, len = array.length; i < len; i++) {
-	            if (fn(array[i], i) === true) { // 只有在 fn 中明确返回 true 才停止循环
-	                return i;
-	            }
-	        }
-
-	        return -1;
-	    }
-
-	    function forEach(array, fn, isDeep) {
-
-	        var each = arguments.callee; //引用自身，用于递归
-
-	        for (var i = 0, len = array.length; i < len; i++) {
-
-	            var item = array[i];
-
-	            if (isDeep && (item instanceof Array)) { //指定了深层次迭代
-	                each(item, fn, true);
-	            }
-	            else {
-	                var value = fn(item, i);
-	                if (value === false) {
-	                    break;
-	                }
-	            }
-	        }
-
-	        return array;
-	    }
-
-	  return {
-	    findIndex: findIndex,
-	        forEach: forEach,
-	  }
-	})();
-
-	module.exports = ArrayUtil;
-
-/***/ },
-/* 8 */
+/* 13 */
 /***/ function(module, exports) {
 
 	
@@ -1456,12 +3542,33 @@
 	module.exports = Transition;
 
 /***/ },
-/* 9 */
+/* 14 */
+/***/ function(module, exports) {
+
+	
+	var Time = (function(){
+
+	  var Date = window.Date;
+	  
+	  function getTime(){
+	      return (Date.now || new Date().getTime)();
+	  }
+
+	  return {
+	    getTime: getTime
+	  }
+	})();
+
+	module.exports = Time;
+
+/***/ },
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var ArrayUtil = __webpack_require__(7);
-	var Phone = __webpack_require__(10);
-	var DOM = __webpack_require__(6);
+	var ArrayUtil = __webpack_require__(5);
+	var Phone = __webpack_require__(16);
+	var DOM = __webpack_require__(12);
+	__webpack_require__(17);
 
 	var Tabs = (function() {
 
@@ -1510,22 +3617,23 @@
 
 
 			if (eventName) {
-				DOM.delegate(container, selector, eventName, function(that) {
+				
+				DOM.delegate(container, selector, eventName, function() {
 
-					var item = that;
-					var index;
+					var index,
+						target = this;
 
-					if (disableClass && item.className.indexOf(disableClass) > -1) {
+					if (disableClass && this.className.indexOf(disableClass) > -1) {
 						return;
 					}
 
 					if ('indexKey' in config) { //推荐的方式
-						index = +item.getAttribute(config.indexKey);
+						index = +this.getAttribute(config.indexKey);
 					} else {
-						var list = $(container).find(selector).toArray();
+						var list = query(container).queryAll(selector);
 
-						index = ArrayUtil.findIndex(list, function(node, index) {
-							return node === item;
+						index = ArrayUtil.exist(list, function(node, index) {
+							return node === target;
 						});
 					}
 
@@ -1568,16 +3676,18 @@
 				meta.activedIndex = index;
 
 				var activedClass = meta.activedClass;
-				var list = $(meta.container).find(meta.selector).toArray();
+				var list = query(meta.container).queryAll(meta.selector);
 				var item = list[index];
 
 				if (index != activedIndex) {
 
 					if (!meta.multi) {
-						$(list[activedIndex]).removeClass(activedClass);
-						$(item).addClass(activedClass);
+						if(activedIndex > -1){
+							list[activedIndex].removeClass(activedClass);
+						}
+						item.addClass(activedClass);
 					} else {
-						$(item).toggleClass(activedClass);
+						item.toggleClass(activedClass);
 					}
 
 				} else {
@@ -1687,7 +3797,7 @@
 	module.exports = Tabs;
 
 /***/ },
-/* 10 */
+/* 16 */
 /***/ function(module, exports) {
 
 	
@@ -1745,6 +3855,34 @@
 	})()
 
 	module.exports = Phone;
+
+/***/ },
+/* 17 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var objectUtil = __webpack_require__(7);
+
+	objectUtil.bundleExtend([
+		HTMLElement.prototype, 
+		NodeList.prototype,
+		window], 
+		{
+			query: function(){
+				if(typeof arguments[0] !== 'string') {
+					return this;
+				}
+				return document.querySelector.apply(document, arguments);
+			},
+			queryAll: function(){
+				if(typeof arguments[0] !== 'string') {
+					return this;
+				}
+				return document.querySelectorAll.apply(document, arguments);
+			},
+			toArray: function(){
+				return [].slice.call(this, 0)
+			}
+		});
 
 /***/ }
 /******/ ]);

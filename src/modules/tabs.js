@@ -1,6 +1,7 @@
 var ArrayUtil = require('./array');
 var Phone = require('./phone');
 var DOM = require('./dom');
+require('./selector');
 
 var Tabs = (function() {
 
@@ -49,22 +50,23 @@ var Tabs = (function() {
 
 
 		if (eventName) {
-			DOM.delegate(container, selector, eventName, function(that) {
+			
+			DOM.delegate(container, selector, eventName, function() {
 
-				var item = that;
-				var index;
+				var index,
+					target = this;
 
-				if (disableClass && item.className.indexOf(disableClass) > -1) {
+				if (disableClass && this.className.indexOf(disableClass) > -1) {
 					return;
 				}
 
 				if ('indexKey' in config) { //推荐的方式
-					index = +item.getAttribute(config.indexKey);
+					index = +this.getAttribute(config.indexKey);
 				} else {
-					var list = $(container).find(selector).toArray();
+					var list = query(container).queryAll(selector);
 
-					index = ArrayUtil.findIndex(list, function(node, index) {
-						return node === item;
+					index = ArrayUtil.exist(list, function(node, index) {
+						return node === target;
 					});
 				}
 
@@ -107,16 +109,18 @@ var Tabs = (function() {
 			meta.activedIndex = index;
 
 			var activedClass = meta.activedClass;
-			var list = $(meta.container).find(meta.selector).toArray();
+			var list = query(meta.container).queryAll(meta.selector);
 			var item = list[index];
 
 			if (index != activedIndex) {
 
 				if (!meta.multi) {
-					$(list[activedIndex]).removeClass(activedClass);
-					$(item).addClass(activedClass);
+					if(activedIndex > -1){
+						list[activedIndex].removeClass(activedClass);
+					}
+					item.addClass(activedClass);
 				} else {
-					$(item).toggleClass(activedClass);
+					item.toggleClass(activedClass);
 				}
 
 			} else {

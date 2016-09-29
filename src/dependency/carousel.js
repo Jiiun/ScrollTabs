@@ -2,8 +2,11 @@ var DOM = require('../modules/dom');
 var TransformStyle = require('../modules/transformStyle');
 var Transition = require('../modules/transition');
 var Time = require('../modules/time');
+var arrayUtil = require('../modules/array');
+require('../modules/eventHandler');
+require('../modules/selector');
 
-var Carousel = (function($){
+var Carousel = (function(){
 
   var transformStyle = TransformStyle;
   var transitionEnd = Transition.end;
@@ -46,13 +49,13 @@ var Carousel = (function($){
     else{
       this.scroller.parentNode.classList.add('stick');
     }
-    $(this.scroller).find('.container').css('min-height', this.minHeight + 'px');
+    this.scroller.querySelector('.container').style.minHeight = this.minHeight + 'px';
 
     this.meta = {};
 
 
     if(config.indicators){
-      this.indicators = document.querySelector('#'+config.indicators).children;
+      this.indicators = query(config.indicators).children;
     }
 
 
@@ -69,9 +72,9 @@ var Carousel = (function($){
     }
     
 
-    $(this.scroller).delegate('.scroll', 'tap', function(){
+    this.scroller.delegate('.scroll', 'tap', function(){
       
-      var index = $(this).index();
+      var index = this.index();
 
       if(index != self.index){
         self.active(index);
@@ -143,7 +146,7 @@ var Carousel = (function($){
         fn && fn()
       }, timeout);
 
-      this.pages = $.map(this.scroller.children, function(item, index){
+      this.pages = arrayUtil.map(this.scroller.children, function(item, index){
 
         var start = -index * unit;
         var end = start - unit;
@@ -305,7 +308,7 @@ var Carousel = (function($){
 
       self.constrain();
 
-      $.each(this.pages, function(index, item){
+      arrayUtil.forEach(this.pages, function(item, index){
 
          if(self.position > item.end){
 
@@ -433,7 +436,7 @@ var Carousel = (function($){
     },
     'activeIndicator':function(index){
       if(this.indicators){
-        $(this.indicators[index]).addClass('selected').siblings().removeClass('selected');
+        this.indicators[index].addClass('selected').siblings().removeClass('selected');
       }
     },
     'resetHeight': function(){
@@ -453,7 +456,8 @@ var Carousel = (function($){
 
       // document.querySelector('#scroller').style.height = height + 'px';
       
-      $(this.scroller).children().css('height', height + 'px');
+      this.scroller.children.css('height', height + 'px');
+      // $(this.scroller).children().css('height', height + 'px');
 
     },
     'scrollTop': function(){
@@ -514,6 +518,6 @@ var Carousel = (function($){
   }
   return Carousel;
   
-})($);
+})();
 
 module.exports = Carousel;
