@@ -1,5 +1,5 @@
 # ScrollTabs
-类似天猫宝贝详情页的滚动页签，即支持横向滑动切换页签，也支持纵向滚动页签页
+类似天猫宝贝详情页的滚动页签，即支持横向滑动切换页签，也支持纵向滚动查看页签内容
 
 点击查看[DEMO](https://jiiun.github.io/ScrollTabs/demo.html)
 
