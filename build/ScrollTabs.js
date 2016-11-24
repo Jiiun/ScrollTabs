@@ -219,8 +219,9 @@
 				'start': function(ev){
 					// ev.preventDefault();
 					this.touchTime = getTime();
-					this.pageY = this.getTouch(ev).pageY || 0;
-					this.pageX = this.getTouch(ev).pageX || 0;
+					this.pageY = this.getTouch(ev).pageY;
+					this.pageX = this.getTouch(ev).pageX;
+					console.log(this.pageX)
 	      			this.touching = true;
 					this.carousel.start(ev);
 				},
