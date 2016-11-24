@@ -1,4 +1,5 @@
 var ArrayUtil = require('./array');
+var browserUtil = require('./browser');
 require('./eventHandler');
 
 var DOM = (function(){
@@ -101,33 +102,46 @@ var DOM = (function(){
 	}
 
 	function delegate(container, selector, type, callback){
-
 		if(type == 'tap'){
-			tap(container, selector, type, callback);
-			return;
+			if(browserUtil.isPhone()){
+				tap(container, selector, type, callback);
+				return;
+			}else{
+				type = 'click';
+				callback = getClickEvent(callback);
+			}
 		}
 		else if(type == 'click'){
 
 			callback = getClickEvent(callback);
 			
 		}
-
+		if(typeof container == 'string'){
+			container = document.querySelectorAll(container)
+		}
 		container.delegate(selector, type, callback);
 	}
 
 	function on(selector, type, callback){
 
 		if(type == 'tap'){
-			onTap(selector, type, callback);
-			return;
+			if(browserUtil.isPhone()){
+				onTap(selector, type, callback);
+				return;
+			}else{
+				type = 'click';
+				callback = getClickEvent(callback);
+			}
 		}
 		else if(type == 'click'){
 
 			callback = getClickEvent(callback);
 			
 		}
-
-		document.querySelector(selector).addEventListener(type, callback);
+		if(typeof selector == 'string'){
+			selector = document.querySelectorAll(selector)
+		}
+		selector.addEventListener(type, callback);
 	}
 
 	function addClassOnly(obj, className, index){

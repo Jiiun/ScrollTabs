@@ -1,0 +1,15 @@
+{
+  "scripts": {
+    "start": "webpack --watch"
+  },
+  "dependencies": {
+    "webpack": "^1.13.3"
+  },
+  "devDependencies": {
+    "css-loader": "^0.26.0",
+    "less": "^2.7.1",
+    "less-loader": "^2.2.3",
+    "postcss-loader": "^1.1.1",
+    "style-loader": "^0.13.1"
+  }
+}

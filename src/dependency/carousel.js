@@ -1,7 +1,7 @@
 var DOM = require('../modules/dom');
 var TransformStyle = require('../modules/transformStyle');
 var Transition = require('../modules/transition');
-var Time = require('../modules/time');
+var Time = require('../modules/datetime');
 var arrayUtil = require('../modules/array');
 require('../modules/eventHandler');
 require('../modules/selector');
@@ -215,10 +215,13 @@ var Carousel = (function(){
     isBinding: function(){
       return this.binding;
     },
+    getTouch: function(ev){
+      return ev.pageY != undefined ? ev : event.touches[0]
+    },
     'start': function(ev){
       // ev.preventDefault();
 
-      var touch = ev.changedTouches[0];
+      var touch = this.getTouch(ev);
       
       // console.log('start-carousel-' + touch.target.innerText.replace(/\n/mg,''));
 
@@ -227,8 +230,8 @@ var Carousel = (function(){
       this.touchTime = 0;
       this.startTime = getTime();
 
-      this.x = this.startX = this.pageX = touch.pageX;
-      this.y = this.startY = this.pageY = touch.pageY;
+      this.x = this.startX = this.pageX = touch.pageX || 0;
+      this.y = this.startY = this.pageY = touch.pageY || 0;
 
 
       //this.x 手指的位置
@@ -240,7 +243,7 @@ var Carousel = (function(){
     'move': function(ev){
 
 
-      var touch = ev.changedTouches[0];
+      var touch = this.getTouch(ev);
 
       // console.log('move-carousel-' + touch.target.innerText.replace(/\n/mg,''));
 

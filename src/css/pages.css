@@ -180,7 +180,7 @@ body {
   margin-left: -2.297rem;
   width: 4.594rem;
   height: 2.5rem;
-  background: url(img/no-data.png) no-repeat;
+  /*background: url(img/no-data.png) no-repeat;*/
   background-position: center;
   background-size: 4.594rem 2.5rem;
 }

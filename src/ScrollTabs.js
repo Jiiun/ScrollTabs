@@ -3,7 +3,10 @@ var TransformStyle = require('./modules/transformStyle');
 var datetimeUtil = require('./modules/datetime');
 var stringUtil = require('./modules/string');
 var arrayUtil = require('./modules/array');
+var objectUtil = require('./modules/object');
 require('./modules/eventHandler');
+require('./css/pages.css');
+require('./css/tabs.css');
 
 var Carousel = require('./dependency/carousel');
 
@@ -44,9 +47,8 @@ var ScrollTabs = (function(){
 
 			var meta = this.meta ={
 				container: config.container,//页签总容器
-				id: config.content.id,//页签内容容器
+				panel: config.panel,//页签内容容器
 				end: config.end,
-				selected: config.content.selected,
 				data: config.data || [],
 				hide: config.hide
 
@@ -72,26 +74,25 @@ var ScrollTabs = (function(){
 			this.tabsContainer = document.getElementById(id).children[0];
 
 			var self = this;
-			var content = document.querySelector('#'+ meta.id);
-
+		    var panel = document.querySelector('#'+ meta.panel);
 
 			//事件提前声明，确保优先执行
-			content.addEventListener('touchstart', function(){
-				self.start(event);
-			}, true);
-
-			content.addEventListener('touchmove', function(){
-				self.move(event);
-			}, true);
-
-			content.addEventListener('touchend', function(){
-				self.end(event);
-			}, true);
+			this.compatibleEvents({
+				start:  function(){
+					self.start(event);
+				},
+				move:  function(){
+					self.move(event);
+				},
+				end:  function(){
+					self.end(event);
+				}
+			}, panel);
 
 
 			//负责实现呈现哪个视图
 			this.carousel = new Carousel({
-				'id': document.querySelector('#'+meta.id),
+				'id': document.querySelector('#'+meta.panel),
 				'indicators': this.tabsContainer,
 				'current': config.current || 0,
 				'dire': function(){
@@ -135,7 +136,7 @@ var ScrollTabs = (function(){
 			
 
 			// this.content = new Tabs({
-			// 	'container': '#' + meta.id,
+			// 	'container': '#' + meta.panel,
 			// 	'current': 0,
 			// 	'selector': '[data-type=content]',
 			// 	'event': 'tap',
@@ -154,19 +155,39 @@ var ScrollTabs = (function(){
 		}
 
 		Tabs.prototype = {
+		    compatibleEvents: function(evt, panel){
+		      var eventsConfig = {
+		        start: ['mousedown', 'touchstart'],
+		        move: ['mousemove', 'touchmove'],
+		        end: ['mouseup', 'touchend']
+		      }
+		      objectUtil.map(eventsConfig, function(key, list){
+		        list.forEach(function(name){
+					panel.addEventListener(name, evt[key], true);
+		        })
+		      })
+		    },
+		    getTouch: function(ev){
+		    	return ev.pageY != undefined ? ev : event.touches[0]
+		    },
 			'start': function(ev){
 				// ev.preventDefault();
 				this.touchTime = getTime();
-				this.pageY = event.touches[0].pageY;
-				this.pageX = event.touches[0].pageX;
+				this.pageY = this.getTouch(ev).pageY || 0;
+				this.pageX = this.getTouch(ev).pageX || 0;
+      			this.touching = true;
 				this.carousel.start(ev);
 			},
 			'move': function(ev){
 
 				//this.dire == true 代表垂直，优先考虑纵向
-				var touch = this.touch = event.touches[0];
+				var touch = this.touch = this.getTouch(ev);
 				this.lastMove = getTime();
 				var self = this;
+
+				if(!this.touching){
+					return;
+				}
 			
 				if(this.meta.hide){
 					//隐藏的话不能滑动
@@ -234,6 +255,8 @@ var ScrollTabs = (function(){
 
 			},
 			'end': function(ev){
+
+				this.touching = false;
 
 				if(!this.moving){
 					//已经调用过end方法，防止强制执行与touchend重复调用
@@ -384,6 +407,7 @@ var ScrollTabs = (function(){
 
 	})();
 
+	window.ScrollTabs = Tabs;
 	return Tabs
 
 })();
