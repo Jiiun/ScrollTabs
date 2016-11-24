@@ -2,7 +2,7 @@ var webpack = require('webpack');
 module.exports = {
     entry: './src/ScrollTabs.js',
     output:{
-        path: './bin',
+        path: './build',
         filename: 'ScrollTabs.js'
     },
     module: {
