@@ -1,10 +1,10 @@
 # ScrollTabs
 类似天猫宝贝详情页的滚动页签，即支持横向滑动切换页签，也支持纵向滚动页签页
 
-[DEMO](https://jiiun.github.io/ScrollTabs/demo.html)
+点击查看[DEMO](https://jiiun.github.io/ScrollTabs/demo.html)
 
 # 用法
-
+##js代码
 ```js
 new ScrollTabs({
     'container': 'wrapper',                 //页签容器ID
@@ -24,7 +24,7 @@ new ScrollTabs({
     'change': function(index) {             //切换tabs后的回调函数，参数是当前激活的index
     }
 });
-
+##html代码
 ```html
 <div id="wrapper" class="wrapper">
     <div id="content" class="content">
