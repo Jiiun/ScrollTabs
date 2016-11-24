@@ -5,6 +5,9 @@
 
 # 用法
 ```js
+<script src="build/ScrollTabs.js"></script>
+```
+```js
 new ScrollTabs({
     'container': 'wrapper',                 //页签容器ID
     'panel': 'scroller',                    //页签panel容器ID
